@@ -53,6 +53,7 @@ nano ~/welcome.sh
 ```
 
 Change weather location:
+
 ```bash
 WEATHER=$(curl -s 'wttr.in/Lake+City?format=3')
 ```
@@ -61,20 +62,36 @@ Add your own commands, ASCII art, or status info.
 
 ---
 
-## 🌐 Language Support (Coming Soon)
+## 🌐 Language Support
 
-This project will support multiple languages. Language files will be in `locales/`:
+This project supports multiple languages using templates located in the `templates/` directory:
 
-```
-locales/
-├── en.sh
-├── es.sh
-└── ...
+```bash
+templates/
+├── welcome.sh.template.en
+├── welcome.sh.template.es
+├── welcome.sh.template.nl
+├── welcome.sh.template.fr
+└── welcome.sh.template.de
 ```
 
 We'll detect `LANG` or accept a `--lang` flag at runtime.
 
 ---
+
+## 🧠 How It Works
+
+- The installer will try to detect your system language using `LANG`, `LANGUAGE`, `LC_ALL`, and `LC_MESSAGES`.
+- If a matching template exists (e.g., `LANG=fr_FR.UTF-8` → `fr`), it will be used.
+- If the language is not supported, it will default to English (`en`).
+
+### 🔧 Override Language
+
+You can manually specify the language to install using the `--lang=xx` flag:
+
+```bash
+curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install-welcome.sh | bash -s -- --lang=de
+```
 
 ## 💻 Requirements
 
@@ -84,6 +101,7 @@ We'll detect `LANG` or accept a `--lang` flag at runtime.
   - `fastfetch` (installed automatically)
 
 Optional:
+
 - Raspberry Pi tools for `vcgencmd` support
 
 ---
@@ -98,9 +116,20 @@ Or open a new terminal or SSH session.
 
 ---
 
+## 🔐 Template Integrity
+
+The installer verifies the integrity of the English template using a static checksum.
+
+Other language templates are not currently validated by checksum but are syntax-checked and compared before overwriting your local copy.
+
+If you customize templates, you can ignore the hash warning or update the `SCRIPT_HASH` in the installer.
+
+---
+
 ## 🤝 Contributing
 
 PRs welcome!
+
 - Improve language support
 - Add new info blocks (e.g. Docker status, CPU graphs)
 - Report bugs or suggestions via Issues
@@ -123,4 +152,3 @@ MIT License
 > For more info, read the full blog guide: [Custom Linux Welcome Message](https://michalferber.me/blog/custom-linux-welcome-message)
 
 Enjoy your new login experience. Whiskey, Tango, Foxtrot ready. 🫡
-
