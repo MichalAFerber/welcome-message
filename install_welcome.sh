@@ -3,9 +3,22 @@
 set -e
 
 REPO_URL="https://raw.githubusercontent.com/MichalAFerber/welcome-message/main"
+TEMPLATE_PATH="templates"
 WELCOME_SCRIPT="$HOME/welcome.sh"
 SCRIPT_HASH="66b27215b4c98b28"
 SHELL_NAME=$(basename "$SHELL")
+LANG_CHOICE="en"
+
+# Parse arguments
+for arg in "$@"; do
+  case $arg in
+    --lang=*)
+      LANG_CHOICE="${arg#*=}"
+      shift
+      ;;
+  esac
+
+done
 
 # Detect shell rc
 case "$SHELL_NAME" in
@@ -30,15 +43,20 @@ install_dependencies() {
     fi
 }
 
-# Download latest template and compare
+# Download and install language-specific welcome script
 install_or_update_welcome() {
-    echo "[+] Checking welcome script..."
+    echo "[+] Checking welcome script for language: $LANG_CHOICE"
+    TEMPLATE_URL="$REPO_URL/$TEMPLATE_PATH/welcome.sh.template.$LANG_CHOICE"
     TEMP_FILE=$(mktemp)
-    curl -fsSL "$REPO_URL/welcome.sh.template" -o "$TEMP_FILE"
+
+    if ! curl -fsSL "$TEMPLATE_URL" -o "$TEMP_FILE"; then
+        echo "[!] Language template not found: $LANG_CHOICE. Falling back to English."
+        curl -fsSL "$REPO_URL/$TEMPLATE_PATH/welcome.sh.template.en" -o "$TEMP_FILE"
+    fi
 
     # Calculate checksum
     LOCAL_HASH=$(sha256sum "$TEMP_FILE" | cut -c1-16)
-    if [ "$LOCAL_HASH" != "$SCRIPT_HASH" ]; then
+    if [ "$LOCAL_HASH" != "$SCRIPT_HASH" ] && [ "$LANG_CHOICE" = "en" ]; then
         echo "[!] Template hash mismatch. Possible update or corruption."
     fi
 
