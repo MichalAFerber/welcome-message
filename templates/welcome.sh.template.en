@@ -14,7 +14,7 @@ echo -e "${YELLOW}Uptime: $(uptime -p) | Load Average: $(cut -d ' ' -f1-3 /proc/
 PUBIP=$(curl -s ifconfig.me)
 echo -e "${GREEN}Public IP: $PUBIP${NC}"
 
-echo -e "${CYAN}Disk Usage on /:$(df -h / | awk 'NR==2 {print \" \" $3 \" used of \" $2 \" (\" $5 \")\"}')${NC}"
+echo -e "${CYAN}Disk Usage on /:$(df -h / |awk 'NR==2 {print " " $3 " used of " $2 " (" $5 ")"}')${NC}"
 
 if command -v apt >/dev/null 2>&1; then
     UPDATES=$(apt list --upgradeable 2>/dev/null | grep -v "Listing..." | wc -l)
