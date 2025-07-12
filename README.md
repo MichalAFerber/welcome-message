@@ -4,8 +4,6 @@ A customizable, portable, and idempotent terminal welcome message for Linux syst
 
 ![screenshot](welcome-message-preview.png)
 
----
-
 ## ✨ Features
 
 - Works on most major Linux distros
@@ -16,8 +14,6 @@ A customizable, portable, and idempotent terminal welcome message for Linux syst
 - Easily customizable via `welcome.sh`
 - Multi-language support (coming soon)
 - Run once, run often – safely re-runnable ✅
-
----
 
 ## ⚡ Quick Install
 
@@ -33,16 +29,12 @@ curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/ins
 
 > Safe to run multiple times. Adds your custom `welcome.sh` and configures it in `.bashrc` or `.zshrc`.
 
----
-
 ## 📦 What It Does
 
 - Installs required dependencies (`fastfetch`, `curl`, Raspberry Pi tools)
 - Creates or updates `$HOME/welcome.sh`
 - Appends to your shell config (`.bashrc` or `.zshrc`)
 - Optionally installs to `/etc/profile.d/` for system-wide login messages
-
----
 
 ## 🛠 Customize
 
@@ -60,8 +52,6 @@ WEATHER=$(curl -s 'wttr.in/Lake+City?format=3')
 
 Add your own commands, ASCII art, or status info.
 
----
-
 ## 🌐 Language Support
 
 This project supports multiple languages using templates located in the `templates/` directory:
@@ -76,8 +66,6 @@ templates/
 ```
 
 We'll detect `LANG` or accept a `--lang` flag at runtime.
-
----
 
 ## 🧠 How It Works
 
@@ -104,8 +92,6 @@ Optional:
 
 - Raspberry Pi tools for `vcgencmd` support
 
----
-
 ## 🧪 Test It Manually
 
 ```bash
@@ -113,8 +99,6 @@ Optional:
 ```
 
 Or open a new terminal or SSH session.
-
----
 
 ## 🔐 Template Integrity
 
@@ -124,8 +108,6 @@ Other language templates are not currently validated by checksum but are syntax-
 
 If you customize templates, you can ignore the hash warning or update the `SCRIPT_HASH` in the installer.
 
----
-
 ## 🤝 Contributing
 
 PRs welcome!
@@ -134,20 +116,14 @@ PRs welcome!
 - Add new info blocks (e.g. Docker status, CPU graphs)
 - Report bugs or suggestions via Issues
 
----
-
 ## 📄 License
 
 MIT License
-
----
 
 ## 🙏 Credits
 
 - Inspired by [fastfetch](https://github.com/fastfetch-cli/fastfetch)
 - Weather via [wttr.in](https://wttr.in)
-
----
 
 > For more info, read the full blog guide: [Custom Linux Welcome Message](https://michalferber.me/blog/custom-linux-welcome-message)
 
