@@ -26,7 +26,7 @@ set -e
 REPO_URL="https://raw.githubusercontent.com/MichalAFerber/welcome-message/main"
 TEMPLATE_PATH="templates"
 WELCOME_SCRIPT="$HOME/welcome.sh"
-SCRIPT_HASH="314abaa50422ff18"
+SCRIPT_HASH="b647444e6325b669"
 SHELL_NAME=$(basename "$SHELL")
 LANG_CHOICE=""
 
