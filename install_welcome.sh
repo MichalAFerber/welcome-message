@@ -7,7 +7,27 @@ TEMPLATE_PATH="templates"
 WELCOME_SCRIPT="$HOME/welcome.sh"
 SCRIPT_HASH="66b27215b4c98b28"
 SHELL_NAME=$(basename "$SHELL")
-LANG_CHOICE="en"
+LANG_CHOICE=""
+
+SUPPORTED_LANGS=("en" "es" "nl" "fr" "de")
+
+# Function to detect system language
+detect_system_lang() {
+  for var in LANGUAGE LC_ALL LC_MESSAGES LANG; do
+    val=$(printenv "$var" | head -n1)
+    if [ -n "$val" ]; then
+      code=${val:0:2}
+      code=${code,,}  # lowercase
+      for lang in "${SUPPORTED_LANGS[@]}"; do
+        if [[ "$code" == "$lang" ]]; then
+          echo "$code"
+          return
+        fi
+      done
+    fi
+  done
+  echo "en"
+}
 
 # Parse arguments
 for arg in "$@"; do
@@ -17,8 +37,12 @@ for arg in "$@"; do
       shift
       ;;
   esac
-
 done
+
+if [ -z "$LANG_CHOICE" ]; then
+  LANG_CHOICE=$(detect_system_lang)
+  echo "[+] Detected system language: $LANG_CHOICE"
+fi
 
 # Detect shell rc
 case "$SHELL_NAME" in
@@ -54,7 +78,6 @@ install_or_update_welcome() {
         curl -fsSL "$REPO_URL/$TEMPLATE_PATH/welcome.sh.template.en" -o "$TEMP_FILE"
     fi
 
-    # Calculate checksum
     LOCAL_HASH=$(sha256sum "$TEMP_FILE" | cut -c1-16)
     if [ "$LOCAL_HASH" != "$SCRIPT_HASH" ] && [ "$LANG_CHOICE" = "en" ]; then
         echo "[!] Template hash mismatch. Possible update or corruption."
