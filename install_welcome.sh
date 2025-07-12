@@ -1,4 +1,25 @@
 #!/bin/bash
+#
+# install_welcome.sh
+#
+# Auto-installs the custom welcome message script (~welcome.sh) with multi-language support.
+# Detects system language, installs required dependencies (Fastfetch, curl, Raspberry Pi packages),
+# updates or installs the welcome message script, and ensures it runs at shell startup.
+#
+# Usage:
+#   curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh | bash
+#   Optionally specify language:
+#   curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh | bash -s -- --lang=es
+#
+# Repository:
+#   https://github.com/MichalAFerber/welcome-message
+#
+# Author:
+#   Michal A. Ferber
+#
+# License:
+#   MIT License
+#
 
 set -e
 
@@ -29,6 +50,11 @@ detect_system_lang() {
   echo "en"
 }
 
+# Detect if running on Raspberry Pi hardware
+is_raspberry_pi() {
+  grep -q 'Raspberry Pi' /proc/device-tree/model 2>/dev/null
+}
+
 # Parse arguments
 for arg in "$@"; do
   case $arg in
@@ -44,7 +70,7 @@ if [ -z "$LANG_CHOICE" ]; then
   echo "[+] Detected system language: $LANG_CHOICE"
 fi
 
-# Detect shell rc
+# Detect shell rc file
 case "$SHELL_NAME" in
     bash) SHELL_RC="$HOME/.bashrc" ;;
     zsh) SHELL_RC="$HOME/.zshrc" ;;
@@ -56,11 +82,22 @@ install_dependencies() {
     echo "[+] Installing required packages..."
     if command -v apt >/dev/null 2>&1; then
         sudo apt update
-        sudo apt install -y fastfetch curl libraspberrypi-bin
+        sudo apt install -y fastfetch curl
+        if is_raspberry_pi; then
+            sudo apt install -y libraspberrypi-bin
+        else
+            echo "[i] Not a Raspberry Pi system, skipping libraspberrypi-bin"
+        fi
     elif command -v dnf >/dev/null 2>&1; then
-        sudo dnf install -y fastfetch curl libraspberrypi-tools
+        sudo dnf install -y fastfetch curl
+        if is_raspberry_pi; then
+            sudo dnf install -y libraspberrypi-tools
+        fi
     elif command -v pacman >/dev/null 2>&1; then
-        sudo pacman -Sy --noconfirm fastfetch curl raspberrypi-firmware
+        sudo pacman -Sy --noconfirm fastfetch curl
+        if is_raspberry_pi; then
+            sudo pacman -Sy --noconfirm raspberrypi-firmware
+        fi
     else
         echo "[!] Unsupported package manager. Install dependencies manually."
         return 1
@@ -81,6 +118,8 @@ install_or_update_welcome() {
     LOCAL_HASH=$(sha256sum "$TEMP_FILE" | cut -c1-16)
     if [ "$LOCAL_HASH" != "$SCRIPT_HASH" ] && [ "$LANG_CHOICE" = "en" ]; then
         echo "[!] Template hash mismatch. Possible update or corruption."
+    elif [ "$LANG_CHOICE" != "en" ]; then
+        echo "[i] Template hash validation is only done for English template."
     fi
 
     if [ ! -f "$WELCOME_SCRIPT" ] || ! cmp -s "$TEMP_FILE" "$WELCOME_SCRIPT"; then
@@ -105,7 +144,7 @@ add_shell_hook() {
     fi
 }
 
-# Install to /etc/profile.d/ if run as root
+# Install system-wide welcome script if run as root
 install_systemwide() {
     if [ "$EUID" -eq 0 ]; then
         echo "[+] Installing system-wide welcome script..."
