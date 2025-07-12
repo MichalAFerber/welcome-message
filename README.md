@@ -2,7 +2,7 @@
 
 A customizable, portable, and idempotent terminal welcome message for Linux systems. Get system info, weather, uptime, updates, and a touch of flair every time you log in.
 
-![screenshot](assets/welcome-preview.png)
+![screenshot](welcome-message-preview.png)
 
 ---
 
@@ -24,7 +24,7 @@ A customizable, portable, and idempotent terminal welcome message for Linux syst
 Run this one-liner to install:
 
 ```bash
-curl -s https://raw.githubusercontent.com/youruser/welcome-message/main/install-welcome.sh | bash
+curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install-welcome.sh | bash
 ```
 
 > Safe to run multiple times. Adds your custom `welcome.sh` and configures it in `.bashrc` or `.zshrc`.
