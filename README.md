@@ -1,7 +1,5 @@
 # Welcome Message Installer for Linux
 
-A customizable, portable, and idempotent terminal welcome message for Linux systems. Get system info, weather, uptime, updates, and a touch of flair every time you log in.
-
 ![screenshot](welcome-message-preview.png)
 
 ## ✨ Features
