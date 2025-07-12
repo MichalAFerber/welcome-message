@@ -1,0 +1,44 @@
+#!/bin/bash
+clear
+command -v fastfetch >/dev/null && fastfetch -c all
+
+CYAN="\033[1;36m"
+YELLOW="\033[1;33m"
+GREEN="\033[1;32m"
+RED="\033[1;31m"
+NC="\033[0m" # No Color
+
+echo -e "${CYAN}Hello, $USER!${NC}"
+echo -e "${YELLOW}Uptime: $(uptime -p) | Load Average: $(cut -d ' ' -f1-3 /proc/loadavg)${NC}"
+
+PUBIP=$(curl -s ifconfig.me)
+echo -e "${GREEN}Public IP: $PUBIP${NC}"
+
+echo -e "${CYAN}Disk Usage on /:$(df -h / | awk 'NR==2 {print \" \" $3 \" used of \" $2 \" (\" $5 \")\"}')${NC}"
+
+if command -v apt >/dev/null 2>&1; then
+    UPDATES=$(apt list --upgradeable 2>/dev/null | grep -v "Listing..." | wc -l)
+    if [ "$UPDATES" -gt 0 ]; then
+        echo -e "${RED}Updates available: $UPDATES package(s)${NC}"
+    else
+        echo -e "${GREEN}Your system is up to date.${NC}"
+    fi
+fi
+
+[ -f /var/run/reboot-required ] && echo -e "${RED}⚠️  Reboot required!${NC}"
+
+if command -v vcgencmd &>/dev/null; then
+    TEMP=$(vcgencmd measure_temp | cut -d= -f2)
+    THROTTLED_RAW=$(vcgencmd get_throttled | cut -d= -f2)
+    if [ "$THROTTLED_RAW" != "0x0" ]; then
+        THROTTLE_STATUS="${RED}Yes ($THROTTLED_RAW)${NC}"
+    else
+        THROTTLE_STATUS="${GREEN}No${NC}"
+    fi
+    echo -e "${CYAN}CPU Temp: $TEMP | Throttled: $THROTTLE_STATUS${NC}"
+fi
+
+WEATHER=$(curl -s 'wttr.in/Lake+City?format=3')
+echo -e "${YELLOW}Weather: $WEATHER${NC}"
+
+echo -e "${YELLOW}You are good to go for Whiskey, Tango, Foxtrot!${NC}"
