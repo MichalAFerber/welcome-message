@@ -24,7 +24,11 @@ A customizable, portable, and idempotent terminal welcome message for Linux syst
 Run this one-liner to install:
 
 ```bash
+# Run with system language fallback
 curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install-welcome.sh | bash
+
+# Or override the language manually
+curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install-welcome.sh | bash -s -- --lang=de
 ```
 
 > Safe to run multiple times. Adds your custom `welcome.sh` and configures it in `.bashrc` or `.zshrc`.
