@@ -1,122 +1,96 @@
-# Welcome Message Installer for Linux
+# 🖥️ Custom Linux Welcome Message
 
 ![screenshot](welcome-message-preview.png)
 
-## ✨ Features
+Easily add a beautiful, dynamic welcome message to your Linux shell—complete with Fastfetch system stats, public IP, disk usage, weather, and multi-language support.
 
-- Works on most major Linux distros
-- Terminal-friendly info from `fastfetch`
-- Public IP, Disk usage, Load Avg, Updates, Weather
-- Raspberry Pi-specific info (Temp, Throttling)
-- Colorful output
-- Easily customizable via `welcome.sh`
-- Multi-language support (coming soon)
-- Run once, run often – safely re-runnable ✅
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-## ⚡ Quick Install
+## 🚀 Features
 
-Run this one-liner to install:
+- 💬 Multi-language welcome message (auto-detected via `LANG`)
+- 📦 Fastfetch system overview at login
+- 🌐 Weather, public IP, disk usage report
+- ✅ Idempotent installer — safe to run repeatedly
+- 🧠 Smart Fastfetch install with PPA fallback (Ubuntu 22.04+)
+- 🐧 Compatible with Ubuntu, Raspberry Pi OS, and most major Linux distros
 
-```bash
-# Run with system language fallback
-curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install-welcome.sh | bash
+## ⚙️ Installation
 
-# Or override the language manually
-curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install-welcome.sh | bash -s -- --lang=de
-```
-
-> Safe to run multiple times. Adds your custom `welcome.sh` and configures it in `.bashrc` or `.zshrc`.
-
-## 📦 What It Does
-
-- Installs required dependencies (`fastfetch`, `curl`, Raspberry Pi tools)
-- Creates or updates `$HOME/welcome.sh`
-- Appends to your shell config (`.bashrc` or `.zshrc`)
-- Optionally installs to `/etc/profile.d/` for system-wide login messages
-
-## 🛠 Customize
-
-After install, edit your welcome message:
+Run this command to install:
 
 ```bash
-nano ~/welcome.sh
-```
+curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh | bash
+````
 
-Change weather location:
+✅ You can re-run this any time — it will only update the script if needed.
 
-```bash
-WEATHER=$(curl -s 'wttr.in/Lake+City?format=3')
-```
+## 🗣️ Language Support
 
-Add your own commands, ASCII art, or status info.
+The installer detects your system language using `LANG` and fetches a matching `welcome.sh.template.{lang}`. If unavailable, it falls back to English (`.en`).
 
-## 🌐 Language Support
-
-This project supports multiple languages using templates located in the `templates/` directory:
+You can override the detected language like this:
 
 ```bash
-templates/
-├── welcome.sh.template.en
-├── welcome.sh.template.es
-├── welcome.sh.template.nl
-├── welcome.sh.template.fr
-└── welcome.sh.template.de
+curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh | bash -s -- --lang=es
 ```
 
-We'll detect `LANG` or accept a `--lang` flag at runtime.
+## 🧪 Safe, Smart, and Idempotent
 
-## 🧠 How It Works
+- Uses content comparison (not hashes) to determine updates
+- Adds hook to `.bashrc` or `.zshrc` if needed
+- Will not duplicate or overwrite if already installed
 
-- The installer will try to detect your system language using `LANG`, `LANGUAGE`, `LC_ALL`, and `LC_MESSAGES`.
-- If a matching template exists (e.g., `LANG=fr_FR.UTF-8` → `fr`), it will be used.
-- If the language is not supported, it will default to English (`en`).
+## 📦 Dependencies
 
-### 🔧 Override Language
+These are installed automatically:
 
-You can manually specify the language to install using the `--lang=xx` flag:
+- `bash`, `curl`
+- `fastfetch` (via APT or PPA if needed)
+- `libraspberrypi-bin` (only on Raspberry Pi)
+
+Ubuntu 22.04+ users benefit from a Fastfetch PPA for latest builds.
+
+## 📂 Directory Layout
 
 ```bash
-curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install-welcome.sh | bash -s -- --lang=de
+.
+├── install_welcome.sh
+└── templates/
+    ├── welcome.sh.template.en
+    ├── welcome.sh.template.es
+    └── welcome.sh.template.nl
 ```
 
-## 💻 Requirements
+Want to contribute a translation? Add a new `welcome.sh.template.xx` file!
 
-- Any Linux system with:
-  - `bash` or `zsh`
-  - `curl`
-  - `fastfetch` (installed automatically)
+## 🧠 Advanced Usage
 
-Optional:
-
-- Raspberry Pi tools for `vcgencmd` support
-
-## 🧪 Test It Manually
+To manually trigger an update, just rerun:
 
 ```bash
-~/welcome.sh
+curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh | bash
 ```
 
-Or open a new terminal or SSH session.
+To use a specific language:
 
-## 🔐 Template Integrity
+```bash
+bash install_welcome.sh --lang=nl
+```
 
-The installer verifies the integrity of the English template using a static checksum.
-
-Other language templates are not currently validated by checksum but are syntax-checked and compared before overwriting your local copy.
-
-If you customize templates, you can ignore the hash warning or update the `SCRIPT_HASH` in the installer.
+To test in a clean shell environment, use Docker or a VM.
 
 ## 🤝 Contributing
 
-PRs welcome!
+Pull requests are welcome! Especially for:
 
-- Improve language support
-- Add new info blocks (e.g. Docker status, CPU graphs)
-- Report bugs or suggestions via Issues
+- 🌍 Translations (`templates/welcome.sh.template.xx`)
+- 💡 Feature ideas
+- 🐞 Bug fixes
 
 ## 📄 License
 
-MIT License
+[MIT License](LICENSE)
 
 ## 🙏 Credits
 
