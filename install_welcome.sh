@@ -6,29 +6,25 @@
 #
 # - Auto-installs the custom welcome message script (~welcome.sh) with multi-language support.
 # - Detects system language, installs required dependencies (Fastfetch, curl, Raspberry Pi packages),
-# - updates or installs the welcome message script, and ensures it runs at shell startup.
+# - Updates or installs the welcome message script, and ensures it runs at shell startup.
 #
 # Usage:
 #   curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh | bash
-#   Optionally specify language:
-#   curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh | bash -s -- --lang=es
 #
 # -----------------------------------------------------------------------------
 # GitHub Repo:   https://github.com/MichalAFerber/welcome-message
 # License:       MIT
 # Author:        Michal Ferber
-# Last Updated:  2025-07-12
+# Last Updated:  2025-07-13
 # -----------------------------------------------------------------------------
-
-SCRIPT_HASH="b647444e6325b669"
 
 set -e
 
-LANG_CODE=$(locale | grep LANG= | cut -d= -f2 | cut -d_ -f1 | sed 's/C/en/')
 DEFAULT_LANG="en"
+LANG_CODE=$(locale | grep LANG= | cut -d= -f2 | cut -d_ -f1 | sed 's/C/en/')
 TEMPLATE_PATH="https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/templates/welcome.sh.template.${LANG_CODE}"
 
-# Try to fetch and fallback to 'en' if not found
+# Fallback if specific language template is not found
 if ! curl --silent --fail --output /dev/null "${TEMPLATE_PATH}"; then
     echo "[!] Language-specific template not found, falling back to English..."
     LANG_CODE="$DEFAULT_LANG"
@@ -38,12 +34,27 @@ fi
 echo "[+] Detected system language: ${LANG_CODE}"
 echo "[+] Installing required packages..."
 
-# Function to check if a command exists
+# Install curl if missing
+sudo apt-get update -y
+sudo apt-get install -y curl
+
+# Optionally install Raspberry Pi tools
+if [[ "$(uname -m)" == "aarch64" || "$(uname -m)" == "armv7l" ]]; then
+    if grep -qi "raspberrypi" /proc/cpuinfo; then
+        sudo apt-get install -y libraspberrypi-bin
+    else
+        echo "[i] Not a Raspberry Pi system, skipping libraspberrypi-bin"
+    fi
+else
+    echo "[i] Not a Raspberry Pi system, skipping libraspberrypi-bin"
+fi
+
+# Check if a command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Function to install fastfetch if not present
+# Install fastfetch with fallback to PPA
 install_fastfetch() {
     if command_exists fastfetch; then
         echo "[i] fastfetch already installed."
@@ -55,15 +66,11 @@ install_fastfetch() {
     if [[ -f /etc/os-release ]]; then
         . /etc/os-release
         if [[ "$ID" == "ubuntu" && "${VERSION_ID%%.*}" -ge 22 ]]; then
-            sudo apt-get update -y
-
             if ! sudo apt-get install -y fastfetch; then
                 echo "[!] fastfetch not found in default repos, trying PPA..."
-
                 sudo apt-get install -y software-properties-common
                 sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch
                 sudo apt-get update
-
                 if ! sudo apt-get install -y fastfetch; then
                     echo "[!] Failed to install fastfetch even with PPA."
                 else
@@ -80,40 +87,30 @@ install_fastfetch() {
     fi
 }
 
-# Install curl
-sudo apt-get install -y curl
-
-# Try to install libraspberrypi-bin if on RPi
-if [[ "$(uname -m)" == "aarch64" || "$(uname -m)" == "armv7l" ]]; then
-    if grep -qi "raspberrypi" /proc/cpuinfo; then
-        sudo apt-get install -y libraspberrypi-bin
-    else
-        echo "[i] Not a Raspberry Pi system, skipping libraspberrypi-bin"
-    fi
-else
-    echo "[i] Not a Raspberry Pi system, skipping libraspberrypi-bin"
-fi
-
 install_fastfetch
 
+# Download the template
 echo "[+] Checking welcome script for language: ${LANG_CODE}"
 TEMP_FILE=$(mktemp)
 curl -sSL "${TEMPLATE_PATH}" -o "${TEMP_FILE}"
 
-# Compute hash
-DOWNLOADED_HASH=$(sha256sum "${TEMP_FILE}" | cut -c1-16)
-
-if [[ "$DOWNLOADED_HASH" != "$SCRIPT_HASH" ]]; then
-    echo "[!] Template hash mismatch. Possible update or corruption."
-    echo "[+] Updating ~/welcome.sh"
-    mv "${TEMP_FILE}" ~/welcome.sh
-    chmod +x ~/welcome.sh
+# Compare with existing ~/welcome.sh and replace only if changed
+if [[ -f ~/welcome.sh ]]; then
+    if cmp -s "$TEMP_FILE" ~/welcome.sh; then
+        echo "[-] ~/welcome.sh is already up to date."
+        rm "$TEMP_FILE"
+    else
+        echo "[+] Updating ~/welcome.sh"
+        mv "$TEMP_FILE" ~/welcome.sh
+        chmod +x ~/welcome.sh
+    fi
 else
-    echo "[-] ~/welcome.sh is already up to date."
-    rm "${TEMP_FILE}"
+    echo "[+] Installing new ~/welcome.sh"
+    mv "$TEMP_FILE" ~/welcome.sh
+    chmod +x ~/welcome.sh
 fi
 
-# Hook into ~/.bashrc
+# Ensure script is hooked into ~/.bashrc
 echo "[+] Ensuring welcome script runs at login"
 if ! grep -q "~/welcome.sh" ~/.bashrc; then
     echo "~/welcome.sh" >> ~/.bashrc
