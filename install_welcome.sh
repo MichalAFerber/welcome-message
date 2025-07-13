@@ -1,162 +1,117 @@
 #!/bin/bash
 #
+# -----------------------------------------------------------------------------
 # install_welcome.sh
+# Custom Linux Welcome Message Installer
 #
-# Auto-installs the custom welcome message script (~welcome.sh) with multi-language support.
-# Detects system language, installs required dependencies (Fastfetch, curl, Raspberry Pi packages),
-# updates or installs the welcome message script, and ensures it runs at shell startup.
+# - Auto-installs the custom welcome message script (~welcome.sh) with multi-language support.
+# - Detects system language, installs required dependencies (Fastfetch, curl, Raspberry Pi packages),
+# - updates or installs the welcome message script, and ensures it runs at shell startup.
 #
 # Usage:
 #   curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh | bash
 #   Optionally specify language:
 #   curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh | bash -s -- --lang=es
 #
-# Repository:
-#   https://github.com/MichalAFerber/welcome-message
-#
-# Author:
-#   Michal A. Ferber
-#
-# License:
-#   MIT License
-#
+# -----------------------------------------------------------------------------
+# GitHub Repo:   https://github.com/MichalAFerber/welcome-message
+# License:       MIT
+# Author:        Michal Ferber
+# Last Updated:  2025-07-12
+# -----------------------------------------------------------------------------
+
+SCRIPT_HASH="314abaa50422ff18"
 
 set -e
 
-REPO_URL="https://raw.githubusercontent.com/MichalAFerber/welcome-message/main"
-TEMPLATE_PATH="templates"
-WELCOME_SCRIPT="$HOME/welcome.sh"
-SCRIPT_HASH="b647444e6325b669"
-SHELL_NAME=$(basename "$SHELL")
-LANG_CHOICE=""
+LANG_CODE=$(locale | grep LANG= | cut -d= -f2 | cut -d_ -f1)
+TEMPLATE_PATH="https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/templates/welcome.sh.template.${LANG_CODE}"
 
-SUPPORTED_LANGS=("en" "es" "nl" "fr" "de")
+echo "[+] Detected system language: ${LANG_CODE}"
+echo "[+] Installing required packages..."
 
-# Function to detect system language
-detect_system_lang() {
-  for var in LANGUAGE LC_ALL LC_MESSAGES LANG; do
-    val=$(printenv "$var" | head -n1)
-    if [ -n "$val" ]; then
-      code=${val:0:2}
-      code=${code,,}  # lowercase
-      for lang in "${SUPPORTED_LANGS[@]}"; do
-        if [[ "$code" == "$lang" ]]; then
-          echo "$code"
-          return
-        fi
-      done
+# Function to check if a command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Function to install fastfetch if not present
+install_fastfetch() {
+    if command_exists fastfetch; then
+        echo "[i] fastfetch already installed."
+        return
     fi
-  done
-  echo "en"
+
+    echo "[+] Attempting to install fastfetch..."
+
+    if [[ -f /etc/os-release ]]; then
+        . /etc/os-release
+        if [[ "$ID" == "ubuntu" && "${VERSION_ID%%.*}" -ge 22 ]]; then
+            sudo apt-get update -y
+
+            if ! sudo apt-get install -y fastfetch; then
+                echo "[!] fastfetch not found in default repos, trying PPA..."
+
+                sudo apt-get install -y software-properties-common
+                sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch
+                sudo apt-get update
+
+                if ! sudo apt-get install -y fastfetch; then
+                    echo "[!] Failed to install fastfetch even with PPA."
+                else
+                    echo "[✓] fastfetch installed from PPA."
+                fi
+            else
+                echo "[✓] fastfetch installed from official repo."
+            fi
+        else
+            echo "[!] Unsupported OS or Ubuntu version < 22.04 — skipping fastfetch install."
+        fi
+    else
+        echo "[!] Could not determine OS info — skipping fastfetch install."
+    fi
 }
 
-# Detect if running on Raspberry Pi hardware
-is_raspberry_pi() {
-  grep -q 'Raspberry Pi' /proc/device-tree/model 2>/dev/null
-}
+# Install curl
+sudo apt-get install -y curl
 
-# Parse arguments
-for arg in "$@"; do
-  case $arg in
-    --lang=*)
-      LANG_CHOICE="${arg#*=}"
-      shift
-      ;;
-  esac
-done
-
-if [ -z "$LANG_CHOICE" ]; then
-  LANG_CHOICE=$(detect_system_lang)
-  echo "[+] Detected system language: $LANG_CHOICE"
+# Try to install libraspberrypi-bin if on RPi
+if [[ "$(uname -m)" == "aarch64" || "$(uname -m)" == "armv7l" ]]; then
+    if grep -qi "raspberrypi" /proc/cpuinfo; then
+        sudo apt-get install -y libraspberrypi-bin
+    else
+        echo "[i] Not a Raspberry Pi system, skipping libraspberrypi-bin"
+    fi
+else
+    echo "[i] Not a Raspberry Pi system, skipping libraspberrypi-bin"
 fi
 
-# Detect shell rc file
-case "$SHELL_NAME" in
-    bash) SHELL_RC="$HOME/.bashrc" ;;
-    zsh) SHELL_RC="$HOME/.zshrc" ;;
-    *) echo "[!] Unsupported shell: $SHELL_NAME" && exit 1 ;;
-esac
+install_fastfetch
 
-# Ensure dependencies are installed
-install_dependencies() {
-    echo "[+] Installing required packages..."
-    if command -v apt >/dev/null 2>&1; then
-        sudo apt update
-        sudo apt install -y fastfetch curl
-        if is_raspberry_pi; then
-            sudo apt install -y libraspberrypi-bin
-        else
-            echo "[i] Not a Raspberry Pi system, skipping libraspberrypi-bin"
-        fi
-    elif command -v dnf >/dev/null 2>&1; then
-        sudo dnf install -y fastfetch curl
-        if is_raspberry_pi; then
-            sudo dnf install -y libraspberrypi-tools
-        fi
-    elif command -v pacman >/dev/null 2>&1; then
-        sudo pacman -Sy --noconfirm fastfetch curl
-        if is_raspberry_pi; then
-            sudo pacman -Sy --noconfirm raspberrypi-firmware
-        fi
-    else
-        echo "[!] Unsupported package manager. Install dependencies manually."
-        return 1
-    fi
-}
+echo "[+] Checking welcome script for language: ${LANG_CODE}"
+TEMP_FILE=$(mktemp)
+curl -sSL "${TEMPLATE_PATH}" -o "${TEMP_FILE}"
 
-# Download and install language-specific welcome script
-install_or_update_welcome() {
-    echo "[+] Checking welcome script for language: $LANG_CHOICE"
-    TEMPLATE_URL="$REPO_URL/$TEMPLATE_PATH/welcome.sh.template.$LANG_CHOICE"
-    TEMP_FILE=$(mktemp)
+# Compute hash
+DOWNLOADED_HASH=$(sha256sum "${TEMP_FILE}" | cut -c1-16)
 
-    if ! curl -fsSL "$TEMPLATE_URL" -o "$TEMP_FILE"; then
-        echo "[!] Language template not found: $LANG_CHOICE. Falling back to English."
-        curl -fsSL "$REPO_URL/$TEMPLATE_PATH/welcome.sh.template.en" -o "$TEMP_FILE"
-    fi
+if [[ "$DOWNLOADED_HASH" != "$SCRIPT_HASH" ]]; then
+    echo "[!] Template hash mismatch. Possible update or corruption."
+    echo "[+] Updating ~/welcome.sh"
+    mv "${TEMP_FILE}" ~/welcome.sh
+    chmod +x ~/welcome.sh
+else
+    echo "[-] ~/welcome.sh is already up to date."
+    rm "${TEMP_FILE}"
+fi
 
-    LOCAL_HASH=$(sha256sum "$TEMP_FILE" | cut -c1-16)
-    if [ "$LOCAL_HASH" != "$SCRIPT_HASH" ] && [ "$LANG_CHOICE" = "en" ]; then
-        echo "[!] Template hash mismatch. Possible update or corruption."
-    elif [ "$LANG_CHOICE" != "en" ]; then
-        echo "[i] Template hash validation is only done for English template."
-    fi
+# Hook into ~/.bashrc
+echo "[+] Ensuring welcome script runs at login"
+if ! grep -q "~/welcome.sh" ~/.bashrc; then
+    echo "~/welcome.sh" >> ~/.bashrc
+else
+    echo "[-] Hook already exists in ~/.bashrc"
+fi
 
-    if [ ! -f "$WELCOME_SCRIPT" ] || ! cmp -s "$TEMP_FILE" "$WELCOME_SCRIPT"; then
-        echo "[+] Updating $WELCOME_SCRIPT"
-        cp "$TEMP_FILE" "$WELCOME_SCRIPT"
-        chmod +x "$WELCOME_SCRIPT"
-    else
-        echo "[-] $WELCOME_SCRIPT is already up to date."
-    fi
-
-    rm -f "$TEMP_FILE"
-}
-
-# Add to shell config if not already there
-add_shell_hook() {
-    echo "[+] Ensuring welcome script runs at login"
-    if ! grep -q 'welcome.sh' "$SHELL_RC"; then
-        echo -e "\n# Launch welcome script\nif [ -x \"$WELCOME_SCRIPT\" ]; then\n    \"$WELCOME_SCRIPT\"\nfi" >> "$SHELL_RC"
-        echo "[+] Hook added to $SHELL_RC"
-    else
-        echo "[-] Hook already exists in $SHELL_RC"
-    fi
-}
-
-# Install system-wide welcome script if run as root
-install_systemwide() {
-    if [ "$EUID" -eq 0 ]; then
-        echo "[+] Installing system-wide welcome script..."
-        cp "$WELCOME_SCRIPT" /etc/profile.d/welcome.sh
-        chmod +x /etc/profile.d/welcome.sh
-    fi
-}
-
-install_dependencies
-install_or_update_welcome
-add_shell_hook
-install_systemwide
-
-echo -e "\n[✓] Welcome message installed. Open a new terminal or SSH session to see it."
-exit 0
+echo ""
+echo "[✓] Welcome message installed. Open a new terminal or SSH session to see it."
