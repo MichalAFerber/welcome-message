@@ -25,7 +25,15 @@ SCRIPT_HASH="b647444e6325b669"
 set -e
 
 LANG_CODE=$(locale | grep LANG= | cut -d= -f2 | cut -d_ -f1)
+DEFAULT_LANG="en"
 TEMPLATE_PATH="https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/templates/welcome.sh.template.${LANG_CODE}"
+
+# Try to fetch and fallback to 'en' if not found
+if ! curl --silent --fail --output /dev/null "${TEMPLATE_PATH}"; then
+    echo "[!] Language-specific template not found, falling back to English..."
+    LANG_CODE="$DEFAULT_LANG"
+    TEMPLATE_PATH="https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/templates/welcome.sh.template.${DEFAULT_LANG}"
+fi
 
 echo "[+] Detected system language: ${LANG_CODE}"
 echo "[+] Installing required packages..."
