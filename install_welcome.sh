@@ -24,7 +24,7 @@ SCRIPT_HASH="b647444e6325b669"
 
 set -e
 
-LANG_CODE=$(locale | grep LANG= | cut -d= -f2 | cut -d_ -f1)
+LANG_CODE=$(locale | grep LANG= | cut -d= -f2 | cut -d_ -f1 | sed 's/C/en/')
 DEFAULT_LANG="en"
 TEMPLATE_PATH="https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/templates/welcome.sh.template.${LANG_CODE}"
 
