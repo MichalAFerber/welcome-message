@@ -33,15 +33,17 @@ fi
 TEMP=$(get_temp)
 echo -e "${CYAN}CPU Temp: $TEMP${NC}"
 
-# Only run throttling check if both vcgencmd exists AND /dev/vcio exists
-if [[ -e /dev/vcio ]] && command -v vcgencmd >/dev/null 2>&1; then
-    THROTTLED_RAW=$(vcgencmd get_throttled 2>/dev/null | cut -d= -f2)
-    if [ "$THROTTLED_RAW" != "0x0" ]; then
-        THROTTLE_STATUS="${RED}Yes ($THROTTLED_RAW)${NC}"
-    else
-        THROTTLE_STATUS="${GREEN}No${NC}"
+# Throttling: only if /dev/vcio exists
+if [[ -e /dev/vcio ]]; then
+    if command -v vcgencmd >/dev/null 2>&1; then
+        THROTTLED_RAW=$(vcgencmd get_throttled 2>/dev/null | cut -d= -f2)
+        if [ "$THROTTLED_RAW" != "0x0" ]; then
+            THROTTLE_STATUS="${RED}Yes ($THROTTLED_RAW)${NC}"
+        else
+            THROTTLE_STATUS="${GREEN}No${NC}"
+        fi
+        echo -e "${CYAN}Throttled: $THROTTLE_STATUS${NC}"
     fi
-    echo -e "${CYAN}Throttled: $THROTTLE_STATUS${NC}"
 fi
 
 # --- Weather ---
