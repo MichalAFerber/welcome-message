@@ -33,10 +33,10 @@ fi
 TEMP=$(get_temp)
 echo -e "${CYAN}CPU Temp: $TEMP${NC}"
 
-# Throttling (only if vcgencmd AND /dev/vcio are accessible)
+# Throttling: skip cleanly if /dev/vcio is missing
 if command -v vcgencmd &>/dev/null; then
     if [[ -e /dev/vcio ]]; then
-        THROTTLED_RAW=$(vcgencmd get_throttled | cut -d= -f2)
+        THROTTLED_RAW=$(vcgencmd get_throttled 2>/dev/null | cut -d= -f2)
         if [ "$THROTTLED_RAW" != "0x0" ]; then
             THROTTLE_STATUS="${RED}Yes ($THROTTLED_RAW)${NC}"
         else
