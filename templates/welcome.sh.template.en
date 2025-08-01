@@ -1,6 +1,6 @@
 #!/bin/bash
 clear
-command -v fastfetch >/dev/null && fastfetch -c all
+fastfetch
 
 CYAN="\033[1;36m"
 YELLOW="\033[1;33m"
@@ -14,10 +14,10 @@ echo -e "${YELLOW}Uptime: $(uptime -p) | Load Average: $(cut -d ' ' -f1-3 /proc/
 PUBIP=$(curl -s ifconfig.me)
 echo -e "${GREEN}Public IP: $PUBIP${NC}"
 
-echo -e "${CYAN}Disk Usage on /:$(df -h / |awk 'NR==2 {print " " $3 " used of " $2 " (" $5 ")"}')${NC}"
+echo -e "${CYAN}Disk Usage on /:$(df -h / | awk 'NR==2 {print " " $3 " used of " $2 " (" $5 ")"}')${NC}"
 
 if command -v apt >/dev/null 2>&1; then
-    UPDATES=$(apt list --upgradeable 2>/dev/null | grep -v "Listing..." | wc -l)
+    UPDATES=$(apt list --upgradeable 2>/dev/null | grep -c -v "Listing...")
     if [ "$UPDATES" -gt 0 ]; then
         echo -e "${RED}Updates available: $UPDATES package(s)${NC}"
     else
@@ -25,19 +25,26 @@ if command -v apt >/dev/null 2>&1; then
     fi
 fi
 
-[ -f /var/run/reboot-required ] && echo -e "${RED}⚠️  Reboot required!${NC}"
+if [ -f /var/run/reboot-required ]; then
+    echo -e "${RED}⚠️  Reboot required!${NC}"
+fi
 
-if command -v vcgencmd &>/dev/null; then
-    TEMP=$(vcgencmd measure_temp | cut -d= -f2)
+# --- CPU Temperature and Throttling ---
+TEMP=$(get_temp)
+echo -e "${CYAN}CPU Temp: $TEMP${NC}"
+
+# Throttling (only if vcgencmd and /dev/vcio are available)
+if command -v vcgencmd &>/dev/null && [[ -e /dev/vcio ]]; then
     THROTTLED_RAW=$(vcgencmd get_throttled | cut -d= -f2)
     if [ "$THROTTLED_RAW" != "0x0" ]; then
         THROTTLE_STATUS="${RED}Yes ($THROTTLED_RAW)${NC}"
     else
         THROTTLE_STATUS="${GREEN}No${NC}"
     fi
-    echo -e "${CYAN}CPU Temp: $TEMP | Throttled: $THROTTLE_STATUS${NC}"
+    echo -e "${CYAN}Throttled: $THROTTLE_STATUS${NC}"
 fi
 
+# --- Weather ---
 WEATHER=$(curl -s 'wttr.in/Lake+City?format=3')
 echo -e "${YELLOW}Weather: $WEATHER${NC}"
 
