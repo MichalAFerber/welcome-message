@@ -15,7 +15,7 @@
 # GitHub Repo:   https://github.com/MichalAFerber/welcome-message
 # License:       MIT
 # Author:        Michal Ferber
-# Last Updated:  2025-07-13
+# Last Updated:  2025-08-01
 # -----------------------------------------------------------------------------
 
 set -e
@@ -89,10 +89,40 @@ install_fastfetch() {
 
 install_fastfetch
 
+# Helper function for CPU temp (added for template compatibility)
+cat << 'EOF' > /tmp/get_temp_function.sh
+get_temp() {
+    # Prefer sysfs method on Ubuntu
+    if grep -qi ubuntu /etc/os-release 2>/dev/null; then
+        if [[ -r /sys/class/thermal/thermal_zone0/temp ]]; then
+            awk '{printf "%.1f°C", $1/1000}' /sys/class/thermal/thermal_zone0/temp
+            return
+        fi
+    fi
+    # Fallback to vcgencmd
+    if command -v vcgencmd &>/dev/null; then
+        if [[ ! -e /dev/vcio ]]; then
+            sudo mknod /dev/vcio c 100 0
+            sudo chown root:video /dev/vcio
+        fi
+        vcgencmd measure_temp | cut -d= -f2
+    else
+        echo "N/A"
+    fi
+}
+EOF
+
 # Download the template
 echo "[+] Checking welcome script for language: ${LANG_CODE}"
 TEMP_FILE=$(mktemp)
 curl -sSL "${TEMPLATE_PATH}" -o "${TEMP_FILE}"
+
+# Inject get_temp function into template (if not already there)
+if ! grep -q "get_temp()" "${TEMP_FILE}"; then
+    cat /tmp/get_temp_function.sh "${TEMP_FILE}" > "${TEMP_FILE}.new"
+    mv "${TEMP_FILE}.new" "${TEMP_FILE}"
+fi
+rm -f /tmp/get_temp_function.sh
 
 # Compare with existing ~/welcome.sh and replace only if changed
 if [[ -f ~/welcome.sh ]]; then
