@@ -26,7 +26,12 @@ TEMPLATE_PATH="https://raw.githubusercontent.com/MichalAFerber/welcome-message/m
 
 # Fallback if specific language template is not found
 if ! curl --silent --fail --output /dev/null "${TEMPLATE_PATH}"; then
-    echo "[!] Language-specific template not found, falling back to English..."
+    echo "[!] Language-specific template not found for '${LANG_CODE}', falling back to English..."
+    echo "[i] Checking available templates in the repository..."
+    AVAILABLE=$(curl -s https://api.github.com/repos/MichalAFerber/welcome-message/contents/templates \
+        | grep -oE 'welcome\.sh\.template\.[a-z]+' \
+        | sed 's/welcome.sh.template.//' | sort | uniq)
+    echo "[i] Available templates: ${AVAILABLE}"
     LANG_CODE="$DEFAULT_LANG"
     TEMPLATE_PATH="https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/templates/welcome.sh.template.${DEFAULT_LANG}"
 fi
@@ -89,40 +94,10 @@ install_fastfetch() {
 
 install_fastfetch
 
-# Helper function for CPU temp (added for template compatibility)
-cat << 'EOF' > /tmp/get_temp_function.sh
-get_temp() {
-    # Prefer sysfs method on Ubuntu
-    if grep -qi ubuntu /etc/os-release 2>/dev/null; then
-        if [[ -r /sys/class/thermal/thermal_zone0/temp ]]; then
-            awk '{printf "%.1f°C", $1/1000}' /sys/class/thermal/thermal_zone0/temp
-            return
-        fi
-    fi
-    # Fallback to vcgencmd
-    if command -v vcgencmd &>/dev/null; then
-        if [[ ! -e /dev/vcio ]]; then
-            sudo mknod /dev/vcio c 100 0
-            sudo chown root:video /dev/vcio
-        fi
-        vcgencmd measure_temp | cut -d= -f2
-    else
-        echo "N/A"
-    fi
-}
-EOF
-
 # Download the template
 echo "[+] Checking welcome script for language: ${LANG_CODE}"
 TEMP_FILE=$(mktemp)
 curl -sSL "${TEMPLATE_PATH}" -o "${TEMP_FILE}"
-
-# Inject get_temp function into template (if not already there)
-if ! grep -q "get_temp()" "${TEMP_FILE}"; then
-    cat /tmp/get_temp_function.sh "${TEMP_FILE}" > "${TEMP_FILE}.new"
-    mv "${TEMP_FILE}.new" "${TEMP_FILE}"
-fi
-rm -f /tmp/get_temp_function.sh
 
 # Compare with existing ~/welcome.sh and replace only if changed
 if [[ -f ~/welcome.sh ]]; then

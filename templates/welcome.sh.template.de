@@ -12,33 +12,45 @@ echo -e "${CYAN}Hallo, $USER!${NC}"
 echo -e "${YELLOW}Betriebszeit: $(uptime -p) | Durchschnittslast: $(cut -d ' ' -f1-3 /proc/loadavg)${NC}"
 
 PUBIP=$(curl -s ifconfig.me)
-echo -e "${GREEN}Öffentliche IP: $PUBIP${NC}"
+echo -e "${GREEN}Öffentliche IP-Adresse: $PUBIP${NC}"
 
-echo -e "${CYAN}Festplattennutzung auf /:$(df -h / | awk 'NR==2 {print \" \" $3 \" von \" $2 \" genutzt (\" $5 \")\"}')${NC}"
+echo -e "${CYAN}Speichernutzung auf /:$(df -h / | awk 'NR==2 {print \" \" $3 \" verwendet von \" $2 \" (\" $5 \")\"}')${NC}"
 
 if command -v apt >/dev/null 2>&1; then
     UPDATES=$(apt list --upgradeable 2>/dev/null | grep -v "Listing..." | wc -l)
     if [ "$UPDATES" -gt 0 ]; then
         echo -e "${RED}Verfügbare Updates: $UPDATES Paket(e)${NC}"
     else
-        echo -e "${GREEN}Dein System ist aktuell.${NC}"
+        echo -e "${GREEN}Dein System ist auf dem neuesten Stand.${NC}"
     fi
 fi
 
-[ -f /var/run/reboot-required ] && echo -e "${RED}⚠️  Neustart erforderlich!${NC}"
+if [ -f /var/run/reboot-required ]; then
+    echo -e "${RED}⚠️  Neustart erforderlich!${NC}"
+fi
 
-if command -v vcgencmd &>/dev/null; then
-    TEMP=$(vcgencmd measure_temp | cut -d= -f2)
-    THROTTLED_RAW=$(vcgencmd get_throttled | cut -d= -f2)
-    if [ "$THROTTLED_RAW" != "0x0" ]; then
-        THROTTLE_STATUS=\"${RED}Ja ($THROTTLED_RAW)${NC}\"
+# --- CPU-Temperatur und Einschränkungen ---
+TEMP=$(get_temp)
+echo -e "${CYAN}CPU-Temperatur: $TEMP${NC}"
+
+# Einschränkungen: nur wenn /dev/vcio vorhanden ist und vcgencmd gültige Daten zurückgibt
+if [[ -e /dev/vcio ]] && command -v vcgencmd >/dev/null 2>&1; then
+    RAW_OUTPUT=$(vcgencmd get_throttled 2>/dev/null || true)
+    if [[ "$RAW_OUTPUT" == throttled=* ]]; then
+        THROTTLED_RAW=$(echo "$RAW_OUTPUT" | cut -d= -f2)
+        if [ "$THROTTLED_RAW" != "0x0" ]; then
+            THROTTLE_STATUS="${RED}Ja ($THROTTLED_RAW)${NC}"
+        else
+            THROTTLE_STATUS="${GREEN}Nein${NC}"
+        fi
+        echo -e "${CYAN}Begrenzt: $THROTTLE_STATUS${NC}"
     else
-        THROTTLE_STATUS=\"${GREEN}Nein${NC}\"
+        echo -e "${CYAN}Begrenzt: ${YELLOW}Übersprungen (ungültige vcgencmd-Ausgabe)${NC}"
     fi
-    echo -e \"${CYAN}CPU-Temperatur: $TEMP | Drosselung: $THROTTLE_STATUS${NC}\"
 fi
 
+# --- Wetter ---
 WEATHER=$(curl -s 'wttr.in/Lake+City?format=3')
-echo -e \"${YELLOW}Wetter: $WEATHER${NC}\"
+echo -e "${YELLOW}Wetter: $WEATHER${NC}"
 
-echo -e \"${YELLOW}Bereit für Whiskey, Tango, Foxtrot!${NC}\"
+echo -e "${YELLOW}Alles bereit für Whiskey, Tango, Foxtrot!${NC}"

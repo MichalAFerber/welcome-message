@@ -1,12 +1,12 @@
 #!/bin/bash
 clear
-fastfetch
+command -v fastfetch >/dev/null && fastfetch -c all
 
 CYAN="\033[1;36m"
 YELLOW="\033[1;33m"
 GREEN="\033[1;32m"
 RED="\033[1;31m"
-NC="\033[0m" # No Color
+NC="\033[0m"
 
 echo -e "${CYAN}Hello, $USER!${NC}"
 echo -e "${YELLOW}Uptime: $(uptime -p) | Load Average: $(cut -d ' ' -f1-3 /proc/loadavg)${NC}"
@@ -17,7 +17,7 @@ echo -e "${GREEN}Public IP: $PUBIP${NC}"
 echo -e "${CYAN}Disk Usage on /:$(df -h / | awk 'NR==2 {print " " $3 " used of " $2 " (" $5 ")"}')${NC}"
 
 if command -v apt >/dev/null 2>&1; then
-    UPDATES=$(apt list --upgradeable 2>/dev/null | grep -c -v "Listing...")
+    UPDATES=$(apt list --upgradeable 2>/dev/null | grep -v "Listing..." | wc -l)
     if [ "$UPDATES" -gt 0 ]; then
         echo -e "${RED}Updates available: $UPDATES package(s)${NC}"
     else

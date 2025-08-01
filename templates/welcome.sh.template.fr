@@ -9,36 +9,48 @@ RED="\033[1;31m"
 NC="\033[0m"
 
 echo -e "${CYAN}Bonjour, $USER !${NC}"
-echo -e "${YELLOW}Temps de fonctionnement : $(uptime -p) | Charge moyenne : $(cut -d ' ' -f1-3 /proc/loadavg)${NC}"
+echo -e "${YELLOW}Temps de fonctionnement : $(uptime -p) | Charge moyenne : $(cut -d ' ' -f1-3 /proc/loadavg)${NC}"
 
 PUBIP=$(curl -s ifconfig.me)
-echo -e "${GREEN}Adresse IP publique : $PUBIP${NC}"
+echo -e "${GREEN}Adresse IP publique : $PUBIP${NC}"
 
-echo -e "${CYAN}Utilisation du disque sur / :$(df -h / | awk 'NR==2 {print \" \" $3 \" utilisés sur \" $2 \" (\" $5 \")\"}')${NC}"
+echo -e "${CYAN}Utilisation du disque sur / :$(df -h / | awk 'NR==2 {print \" \" $3 \" utilisés sur \" $2 \" (\" $5 \")\"}')${NC}"
 
 if command -v apt >/dev/null 2>&1; then
     UPDATES=$(apt list --upgradeable 2>/dev/null | grep -v "Listing..." | wc -l)
     if [ "$UPDATES" -gt 0 ]; then
-        echo -e "${RED}Mises à jour disponibles : $UPDATES paquet(s)${NC}"
+        echo -e "${RED}Mises à jour disponibles : $UPDATES paquet(s)${NC}"
     else
         echo -e "${GREEN}Votre système est à jour.${NC}"
     fi
 fi
 
-[ -f /var/run/reboot-required ] && echo -e "${RED}⚠️  Redémarrage requis !${NC}"
-
-if command -v vcgencmd &>/dev/null; then
-    TEMP=$(vcgencmd measure_temp | cut -d= -f2)
-    THROTTLED_RAW=$(vcgencmd get_throttled | cut -d= -f2)
-    if [ "$THROTTLED_RAW" != "0x0" ]; then
-        THROTTLE_STATUS="${RED}Oui ($THROTTLED_RAW)${NC}"
-    else
-        THROTTLE_STATUS="${GREEN}Non${NC}"
-    fi
-    echo -e "${CYAN}Température CPU : $TEMP | Limité : $THROTTLE_STATUS${NC}"
+if [ -f /var/run/reboot-required ]; then
+    echo -e "${RED}⚠️  Redémarrage requis !${NC}"
 fi
 
-WEATHER=$(curl -s 'wttr.in/Lake+City?format=3')
-echo -e "${YELLOW}Météo : $WEATHER${NC}"
+# --- Température du CPU et Limitations ---
+TEMP=$(get_temp)
+echo -e "${CYAN}Température du CPU : $TEMP${NC}"
 
-echo -e "${YELLOW}Tout est prêt pour Whiskey, Tango, Foxtrot !${NC}"
+# Limitations : uniquement si /dev/vcio existe et que vcgencmd renvoie des données valides
+if [[ -e /dev/vcio ]] && command -v vcgencmd >/dev/null 2>&1; then
+    RAW_OUTPUT=$(vcgencmd get_throttled 2>/dev/null || true)
+    if [[ "$RAW_OUTPUT" == throttled=* ]]; then
+        THROTTLED_RAW=$(echo "$RAW_OUTPUT" | cut -d= -f2)
+        if [ "$THROTTLED_RAW" != "0x0" ]; then
+            THROTTLE_STATUS="${RED}Oui ($THROTTLED_RAW)${NC}"
+        else
+            THROTTLE_STATUS="${GREEN}Non${NC}"
+        fi
+        echo -e "${CYAN}Limité : $THROTTLE_STATUS${NC}"
+    else
+        echo -e "${CYAN}Limité : ${YELLOW}Ignoré (sortie invalide de vcgencmd)${NC}"
+    fi
+fi
+
+# --- Météo ---
+WEATHER=$(curl -s 'wttr.in/Lake+City?format=3')
+echo -e "${YELLOW}Météo : $WEATHER${NC}"
+
+echo -e "${YELLOW}Tout est prêt pour Whiskey, Tango, Foxtrot !${NC}"

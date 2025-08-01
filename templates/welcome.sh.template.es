@@ -25,19 +25,30 @@ if command -v apt >/dev/null 2>&1; then
     fi
 fi
 
-[ -f /var/run/reboot-required ] && echo -e "${RED}⚠️  ¡Reinicio requerido!${NC}"
-
-if command -v vcgencmd &>/dev/null; then
-    TEMP=$(vcgencmd measure_temp | cut -d= -f2)
-    THROTTLED_RAW=$(vcgencmd get_throttled | cut -d= -f2)
-    if [ "$THROTTLED_RAW" != "0x0" ]; then
-        THROTTLE_STATUS="${RED}Sí ($THROTTLED_RAW)${NC}"
+if [ -f /var/run/reboot-required ]; then
+    echo -e "${RED}⚠️  ¡Reinicio requerido!${NC}"
+fi
+ 
+# --- CPU Temperature and Throttling ---
+TEMP=$(get_temp)
+echo -e "${CYAN}Temperatura de CPU: $TEMP${NC}"
+# Throttling: only if /dev/vcio exists and vcgencmd returns usable data
+if [[ -e /dev/vcio ]] && command -v vcgencmd >/dev/null 2>&1; then
+    RAW_OUTPUT=$(vcgencmd get_throttled 2>/dev/null || true)
+    if [[ "$RAW_OUTPUT" == throttled=* ]]; then
+        THROTTLED_RAW=$(echo "$RAW_OUTPUT" | cut -d= -f2)
+        if [ "$THROTTLED_RAW" != "0x0" ]; then
+            THROTTLE_STATUS="${RED}Sí ($THROTTLED_RAW)${NC}"
+        else
+            THROTTLE_STATUS="${GREEN}No${NC}"
+        fi
+        echo -e "${CYAN}Limitado: $THROTTLE_STATUS${NC}"
     else
-        THROTTLE_STATUS="${GREEN}No${NC}"
+        echo -e "${CYAN}Limitado: ${YELLOW}Omitido (salida inválida de vcgencmd)${NC}"
     fi
-    echo -e "${CYAN}Temperatura de CPU: $TEMP | Limitado: $THROTTLE_STATUS${NC}"
 fi
 
+# --- Weather ---
 WEATHER=$(curl -s 'wttr.in/Lake+City?format=3')
 echo -e "${YELLOW}Clima: $WEATHER${NC}"
 
