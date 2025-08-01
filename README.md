@@ -27,27 +27,30 @@ curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/ins
 
 ## 🗣️ Language Support
 
-The installer detects your system language using `LANG` and fetches a matching `welcome.sh.template.{lang}`. If unavailable, it falls back to English (`.en`).
+The installer detects your system language using `LANG` and fetches a matching `welcome.sh.template.{lang}`.
+Currently available: `en`, `es`, `nl`, `fr`, `de`.
+If no matching template is found, the script will display all available templates and automatically use English.
 
-You can override the detected language like this:
+You can temporarily force a language without changing your system locale permanently:
 
 ```bash
-curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh | bash -s -- --lang=es
+LANG=fr_FR.UTF-8 LANGUAGE=fr \
+bash <(curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh)
 ```
 
 ## 🧪 Safe, Smart, and Idempotent
 
-- Uses content comparison (not hashes) to determine updates
-- Adds hook to `.bashrc` or `.zshrc` if needed
-- Will not duplicate or overwrite if already installed
+* Uses content comparison (not hashes) to determine updates
+* Adds hook to `.bashrc` or `.zshrc` if needed
+* Will not duplicate or overwrite if already installed
 
 ## 📦 Dependencies
 
 These are installed automatically:
 
-- `bash`, `curl`
-- `fastfetch` (via APT or PPA if needed)
-- `libraspberrypi-bin` (only on Raspberry Pi)
+* `bash`, `curl`
+* `fastfetch` (via APT or PPA if needed)
+* `libraspberrypi-bin` (only on Raspberry Pi)
 
 Ubuntu 22.04+ users benefit from a Fastfetch PPA for latest builds.
 
@@ -59,7 +62,9 @@ Ubuntu 22.04+ users benefit from a Fastfetch PPA for latest builds.
 └── templates/
     ├── welcome.sh.template.en
     ├── welcome.sh.template.es
-    └── welcome.sh.template.nl
+    ├── welcome.sh.template.nl
+    ├── welcome.sh.template.fr
+    └── welcome.sh.template.de
 ```
 
 Want to contribute a translation? Add a new `welcome.sh.template.xx` file!
@@ -72,21 +77,15 @@ To manually trigger an update, just rerun:
 curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh | bash
 ```
 
-To use a specific language:
-
-```bash
-bash install_welcome.sh --lang=nl
-```
-
 To test in a clean shell environment, use Docker or a VM.
 
 ## 🤝 Contributing
 
 Pull requests are welcome! Especially for:
 
-- 🌍 Translations (`templates/welcome.sh.template.xx`)
-- 💡 Feature ideas
-- 🐞 Bug fixes
+* 🌍 Translations (`templates/welcome.sh.template.xx`)
+* 💡 Feature ideas
+* 🐞 Bug fixes
 
 ## 📄 License
 
@@ -94,8 +93,8 @@ Pull requests are welcome! Especially for:
 
 ## 🙏 Credits
 
-- Inspired by [fastfetch](https://github.com/fastfetch-cli/fastfetch)
-- Weather via [wttr.in](https://wttr.in)
+* Inspired by [fastfetch](https://github.com/fastfetch-cli/fastfetch)
+* Weather via [wttr.in](https://wttr.in)
 
 > For more info, read the full blog guide: [Custom Linux Welcome Message](https://michalferber.me/blog/custom-linux-welcome-message)
 
