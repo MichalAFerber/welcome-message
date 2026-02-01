@@ -201,20 +201,27 @@ install_fastfetch() {
     if [[ -f /etc/os-release ]]; then
         . /etc/os-release
         
-        if [[ "$ID" == "ubuntu" && "${VERSION_ID%%.*}" -ge 22 ]]; then
+        # Handle Debian-based systems (Ubuntu, Debian, Raspberry Pi OS, etc.)
+        if [[ "$ID" == "ubuntu" ]] || [[ "$ID" == "debian" ]] || [[ "$ID" == "raspbian" ]]; then
             if [[ "$TEST_MODE" == "false" ]]; then
-                if ! sudo apt-get install -y fastfetch; then
-                    echo "[!] fastfetch not found in default repos, trying PPA..."
-                    sudo apt-get install -y software-properties-common
-                    sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch
-                    sudo apt-get update
-                    if ! sudo apt-get install -y fastfetch; then
-                        echo "[!] Failed to install fastfetch even with PPA."
-                    else
-                        echo "[✓] fastfetch installed from PPA."
-                    fi
-                else
+                # Try direct install first
+                if sudo apt-get install -y fastfetch 2>/dev/null; then
                     echo "[✓] fastfetch installed from official repo."
+                else
+                    # If that fails and it's Ubuntu 22+, try PPA
+                    if [[ "$ID" == "ubuntu" && "${VERSION_ID%%.*}" -ge 22 ]]; then
+                        echo "[!] fastfetch not found in default repos, trying PPA..."
+                        sudo apt-get install -y software-properties-common
+                        sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch
+                        sudo apt-get update
+                        if ! sudo apt-get install -y fastfetch; then
+                            echo "[!] Failed to install fastfetch even with PPA."
+                        else
+                            echo "[✓] fastfetch installed from PPA."
+                        fi
+                    else
+                        echo "[!] Failed to install fastfetch from default repos."
+                    fi
                 fi
             else
                 echo "[TEST] Would attempt to install fastfetch"

@@ -1,9 +1,10 @@
-# macOS Compatibility Fixes
+# macOS & Raspberry Pi Compatibility Fixes
 
 ## Issues Fixed
 
-### 1. Language Code Parsing (Quote Character Issue)
-**Problem**: On macOS, the language code was captured as `"en` instead of `en`
+### macOS Issues (v2.0.1)
+
+#### 1. Language Code Parsing (Quote Character Issue)
 **Root Cause**: `locale` output includes quotes, and the parsing didn't handle them
 **Solution**: Added `tr -d '"'` to remove quotes and `tr -d ' '` to remove spaces
 
@@ -97,11 +98,33 @@ curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/ins
 ✅ ASCII art banner
 ✅ All customization options
 
+## Raspberry Pi Issues (v2.0.2)
+
+### Fastfetch Not Installing on Raspberry Pi
+
+**Problem**: Fastfetch was not installed on Raspberry Pi 4 during installation
+**Root Cause**: The installer only checked for Ubuntu 22+ to install fastfetch, but Raspberry Pi OS has `ID=raspbian` or `ID=debian`
+**Solution**: Added support for Debian-based systems and Raspbian
+
+```bash
+# Before (Ubuntu 22+ only)
+if [[ "$ID" == "ubuntu" && "${VERSION_ID%%.*}" -ge 22 ]]; then
+
+# After (all Debian-based systems)
+if [[ "$ID" == "ubuntu" ]] || [[ "$ID" == "debian" ]] || [[ "$ID" == "raspbian" ]]; then
+```
+
+Now the installer:
+- Attempts direct apt install first (works on all Debian-based systems)
+- Falls back to PPA only for Ubuntu 22+ if needed
+- Works properly on Raspberry Pi OS, Debian, and other Debian derivatives
+
 ## Files Modified
 
-- `install_welcome.sh` - Added macOS detection and graceful handling
+- `install_welcome.sh` - Fixed fastfetch installation for Debian-based systems
 - `README.md` - Added macOS installation instructions
+- `CHANGELOG.md` - Documented all fixes
 
 ---
 
-**Status**: macOS support is now fully working! 🎉
+**Status**: macOS and Raspberry Pi support are now fully working! 🎉

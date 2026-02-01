@@ -2,6 +2,20 @@
 
 All notable changes to the Custom Linux Welcome Message project will be documented in this file.
 
+## [2.0.2] - 2026-01-31
+
+### 🐛 Bug Fixes
+
+- **Raspberry Pi fastfetch installation** - Fixed installer skipping fastfetch on Raspberry Pi OS
+- **Debian support** - Now properly installs fastfetch on Debian-based systems
+- **Raspbian support** - Added explicit support for Raspbian (older Raspberry Pi OS)
+
+### ✨ Improvements
+
+- Simplified fastfetch installation logic for apt-based systems
+- PPA fallback now only used for Ubuntu 22+ as intended
+- Better error handling for package installation failures
+
 ## [2.0.1] - 2026-01-31
 
 ### 🐛 Bug Fixes
