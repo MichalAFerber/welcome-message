@@ -280,6 +280,6 @@ Pull requests are welcome! Especially for:
 * Inspired by [fastfetch](https://github.com/fastfetch-cli/fastfetch)
 * Weather via [wttr.in](https://wttr.in)
 
-> For more info, read the full blog guide: [Custom Linux Welcome Message](https://michalferber.me/blog/custom-linux-welcome-message)
+> For more info, read the full blog guide: [Custom Linux Welcome Message](https://michalferber.me/2025-07-07-custom-linux-welcome-message/)
 
 Enjoy your new login experience. Whiskey, Tango, Foxtrot ready. 🫡
