@@ -117,7 +117,7 @@ get_top_cpu() {
 
 # Run fastfetch if enabled
 if [[ "$SHOW_FASTFETCH" == "true" ]]; then
-    command -v fastfetch >/dev/null && fastfetch -c all
+    command -v fastfetch >/dev/null && fastfetch
 fi
 
 CYAN="\033[1;36m"

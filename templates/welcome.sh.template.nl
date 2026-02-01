@@ -95,7 +95,7 @@ get_top_cpu() {
 }
 
 clear
-[[ "$SHOW_FASTFETCH" == "true" ]] && command -v fastfetch >/dev/null && fastfetch -c all
+[[ "$SHOW_FASTFETCH" == "true" ]] && command -v fastfetch >/dev/null && fastfetch
 
 CYAN="\033[1;36m"
 YELLOW="\033[1;33m"
