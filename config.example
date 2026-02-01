@@ -1,0 +1,61 @@
+# Welcome.sh Configuration File
+# 
+# This is an example configuration file for welcome.sh
+# Copy to ~/.config/welcome.sh/config and customize as needed
+#
+# Installation location: ~/.config/welcome.sh/config
+
+# ============================================================================
+# Display Options
+# ============================================================================
+
+# Show fastfetch system information
+# Default: true
+SHOW_FASTFETCH=true
+
+# Show weather information from wttr.in
+# Default: true
+SHOW_WEATHER=true
+
+# Show your public IP address
+# Default: true
+SHOW_PUBLIC_IP=true
+
+# Show system metrics (memory usage, top CPU process)
+# Default: true
+SHOW_SYSTEM_METRICS=true
+
+# Show ASCII art banner at the top
+# Default: false
+SHOW_ASCII_ART=false
+
+# Quiet mode - reduces output for faster loading
+# Default: false
+QUIET_MODE=false
+
+# ============================================================================
+# Location Settings
+# ============================================================================
+
+# Weather location for wttr.in
+# Format: "City+Name" or "City" (use + for spaces)
+# Leave empty or comment out to use default (Lake+City)
+# Examples:
+#   WEATHER_LOCATION="New+York"
+#   WEATHER_LOCATION="London"
+#   WEATHER_LOCATION="Tokyo"
+WEATHER_LOCATION=""
+
+# ============================================================================
+# Performance Settings
+# ============================================================================
+
+# Cache timeout in seconds for public IP and weather data
+# Reduces external API calls and improves load time
+# Default: 3600 (1 hour)
+CACHE_TIMEOUT=3600
+
+# Request timeout for external API calls (curl)
+# Prevents hanging on slow connections
+# Default: 3 (seconds)
+REQUEST_TIMEOUT=3

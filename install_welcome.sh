@@ -11,14 +11,102 @@
 # Usage:
 #   curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh | bash
 #
+#   With flags:
+#     --uninstall     Remove welcome.sh and hooks
+#     --test          Test mode (no actual installation)
+#     --no-deps       Skip dependency installation
+#     --help          Show help message
+#
 # -----------------------------------------------------------------------------
 # GitHub Repo:   https://github.com/MichalAFerber/welcome-message
 # License:       MIT
 # Author:        Michal Ferber
-# Last Updated:  2025-08-01
+# Last Updated:  2026-01-31
 # -----------------------------------------------------------------------------
 
 set -e
+
+# Parse command line arguments
+UNINSTALL=false
+TEST_MODE=false
+NO_DEPS=false
+
+for arg in "$@"; do
+    case $arg in
+        --uninstall)
+            UNINSTALL=true
+            shift
+            ;;
+        --test)
+            TEST_MODE=true
+            shift
+            ;;
+        --no-deps)
+            NO_DEPS=true
+            shift
+            ;;
+        --help)
+            echo "Usage: $0 [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  --uninstall    Remove welcome.sh and shell hooks"
+            echo "  --test         Test mode - show what would be done"
+            echo "  --no-deps      Skip dependency installation"
+            echo "  --help         Show this help message"
+            echo ""
+            echo "Examples:"
+            echo "  $0                    # Normal installation"
+            echo "  $0 --test             # Test without installing"
+            echo "  $0 --uninstall        # Remove installation"
+            exit 0
+            ;;
+        *)
+            ;;
+    esac
+done
+
+# Uninstall function
+uninstall_welcome() {
+    echo "[+] Uninstalling welcome message..."
+    
+    # Remove the script
+    if [[ -f ~/welcome.sh ]]; then
+        rm ~/welcome.sh
+        echo "[✓] Removed ~/welcome.sh"
+    fi
+    
+    # Remove hooks from .bashrc
+    if [[ -f ~/.bashrc ]]; then
+        sed -i.bak '/~\/welcome\.sh/d' ~/.bashrc
+        echo "[✓] Removed hook from ~/.bashrc"
+    fi
+    
+    # Remove hooks from .zshrc
+    if [[ -f ~/.zshrc ]]; then
+        sed -i.bak '/~\/welcome\.sh/d' ~/.zshrc
+        echo "[✓] Removed hook from ~/.zshrc"
+    fi
+    
+    # Remove config and cache
+    if [[ -d ~/.config/welcome.sh ]]; then
+        rm -rf ~/.config/welcome.sh
+        echo "[✓] Removed configuration"
+    fi
+    
+    if [[ -d ~/.cache/welcome.sh ]]; then
+        rm -rf ~/.cache/welcome.sh
+        echo "[✓] Removed cache"
+    fi
+    
+    echo ""
+    echo "[✓] Welcome message uninstalled successfully."
+    exit 0
+}
+
+# Handle uninstall
+if [[ "$UNINSTALL" == "true" ]]; then
+    uninstall_welcome
+fi
 
 DEFAULT_LANG="en"
 LANG_CODE=$(locale | grep LANG= | cut -d= -f2 | cut -d_ -f1 | sed 's/C/en/')
@@ -37,21 +125,43 @@ if ! curl --silent --fail --output /dev/null "${TEMPLATE_PATH}"; then
 fi
 
 echo "[+] Detected system language: ${LANG_CODE}"
-echo "[+] Installing required packages..."
 
-# Install curl if missing
-sudo apt-get update -y
-sudo apt-get install -y curl
+if [[ "$NO_DEPS" == "false" ]]; then
+    echo "[+] Installing required packages..."
 
-# Optionally install Raspberry Pi tools
-if [[ "$(uname -m)" == "aarch64" || "$(uname -m)" == "armv7l" ]]; then
-    if grep -qi "raspberrypi" /proc/cpuinfo; then
-        sudo apt-get install -y libraspberrypi-bin
+    # Detect package manager and install dependencies
+    if command -v apt-get >/dev/null 2>&1; then
+        [[ "$TEST_MODE" == "false" ]] && sudo apt-get update -y
+        [[ "$TEST_MODE" == "false" ]] && sudo apt-get install -y curl || echo "[TEST] Would install curl with apt"
+    elif command -v dnf >/dev/null 2>&1; then
+        [[ "$TEST_MODE" == "false" ]] && sudo dnf install -y curl || echo "[TEST] Would install curl with dnf"
+    elif command -v yum >/dev/null 2>&1; then
+        [[ "$TEST_MODE" == "false" ]] && sudo yum install -y curl || echo "[TEST] Would install curl with yum"
+    elif command -v pacman >/dev/null 2>&1; then
+        [[ "$TEST_MODE" == "false" ]] && sudo pacman -Sy --noconfirm curl || echo "[TEST] Would install curl with pacman"
+    elif command -v zypper >/dev/null 2>&1; then
+        [[ "$TEST_MODE" == "false" ]] && sudo zypper install -y curl || echo "[TEST] Would install curl with zypper"
     else
-        echo "[i] Not a Raspberry Pi system, skipping libraspberrypi-bin"
+        echo "[!] Unknown package manager. Please install curl manually."
+    fi
+
+    # Improved Raspberry Pi detection
+    IS_RPI=false
+    if [[ -f /proc/device-tree/model ]] && grep -qi "raspberry pi" /proc/device-tree/model 2>/dev/null; then
+        IS_RPI=true
+    elif [[ -f /boot/config.txt ]] || [[ -f /boot/firmware/config.txt ]]; then
+        IS_RPI=true
+    fi
+
+    # Install Raspberry Pi tools if on Raspberry Pi
+    if [[ "$IS_RPI" == "true" ]]; then
+        echo "[i] Raspberry Pi detected"
+        if command -v apt-get >/dev/null 2>&1; then
+            [[ "$TEST_MODE" == "false" ]] && sudo apt-get install -y libraspberrypi-bin || echo "[TEST] Would install libraspberrypi-bin"
+        fi
     fi
 else
-    echo "[i] Not a Raspberry Pi system, skipping libraspberrypi-bin"
+    echo "[i] Skipping dependency installation (--no-deps flag set)"
 fi
 
 # Check if a command exists
@@ -70,34 +180,54 @@ install_fastfetch() {
 
     if [[ -f /etc/os-release ]]; then
         . /etc/os-release
+        
         if [[ "$ID" == "ubuntu" && "${VERSION_ID%%.*}" -ge 22 ]]; then
-            if ! sudo apt-get install -y fastfetch; then
-                echo "[!] fastfetch not found in default repos, trying PPA..."
-                sudo apt-get install -y software-properties-common
-                sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch
-                sudo apt-get update
+            if [[ "$TEST_MODE" == "false" ]]; then
                 if ! sudo apt-get install -y fastfetch; then
-                    echo "[!] Failed to install fastfetch even with PPA."
+                    echo "[!] fastfetch not found in default repos, trying PPA..."
+                    sudo apt-get install -y software-properties-common
+                    sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch
+                    sudo apt-get update
+                    if ! sudo apt-get install -y fastfetch; then
+                        echo "[!] Failed to install fastfetch even with PPA."
+                    else
+                        echo "[✓] fastfetch installed from PPA."
+                    fi
                 else
-                    echo "[✓] fastfetch installed from PPA."
+                    echo "[✓] fastfetch installed from official repo."
                 fi
             else
-                echo "[✓] fastfetch installed from official repo."
+                echo "[TEST] Would attempt to install fastfetch"
             fi
+        elif [[ "$ID" == "fedora" ]] || [[ "$ID" == "rhel" ]] || [[ "$ID" == "centos" ]]; then
+            [[ "$TEST_MODE" == "false" ]] && sudo dnf install -y fastfetch || echo "[TEST] Would install fastfetch with dnf"
+        elif [[ "$ID" == "arch" ]] || [[ "$ID" == "manjaro" ]]; then
+            [[ "$TEST_MODE" == "false" ]] && sudo pacman -S --noconfirm fastfetch || echo "[TEST] Would install fastfetch with pacman"
+        elif [[ "$ID" == "opensuse" ]] || [[ "$ID" == "opensuse-leap" ]] || [[ "$ID" == "opensuse-tumbleweed" ]]; then
+            [[ "$TEST_MODE" == "false" ]] && sudo zypper install -y fastfetch || echo "[TEST] Would install fastfetch with zypper"
         else
-            echo "[!] Unsupported OS or Ubuntu version < 22.04 — skipping fastfetch install."
+            echo "[!] Unsupported OS for automatic fastfetch install."
         fi
     else
         echo "[!] Could not determine OS info — skipping fastfetch install."
     fi
 }
 
-install_fastfetch
+if [[ "$NO_DEPS" == "false" ]]; then
+    install_fastfetch
+fi
 
 # Download the template
 echo "[+] Checking welcome script for language: ${LANG_CODE}"
 TEMP_FILE=$(mktemp)
-curl -sSL "${TEMPLATE_PATH}" -o "${TEMP_FILE}"
+
+if [[ "$TEST_MODE" == "false" ]]; then
+    curl -sSL "${TEMPLATE_PATH}" -o "${TEMP_FILE}"
+else
+    echo "[TEST] Would download template from ${TEMPLATE_PATH}"
+    # In test mode, create a dummy file
+    echo "# Test welcome script" > "${TEMP_FILE}"
+fi
 
 # Compare with existing ~/welcome.sh and replace only if changed
 if [[ -f ~/welcome.sh ]]; then
@@ -105,23 +235,109 @@ if [[ -f ~/welcome.sh ]]; then
         echo "[-] ~/welcome.sh is already up to date."
         rm "$TEMP_FILE"
     else
-        echo "[+] Updating ~/welcome.sh"
-        mv "$TEMP_FILE" ~/welcome.sh
-        chmod +x ~/welcome.sh
+        if [[ "$TEST_MODE" == "false" ]]; then
+            echo "[+] Updating ~/welcome.sh"
+            mv "$TEMP_FILE" ~/welcome.sh
+            chmod +x ~/welcome.sh
+        else
+            echo "[TEST] Would update ~/welcome.sh"
+            rm "$TEMP_FILE"
+        fi
     fi
 else
-    echo "[+] Installing new ~/welcome.sh"
-    mv "$TEMP_FILE" ~/welcome.sh
-    chmod +x ~/welcome.sh
+    if [[ "$TEST_MODE" == "false" ]]; then
+        echo "[+] Installing new ~/welcome.sh"
+        mv "$TEMP_FILE" ~/welcome.sh
+        chmod +x ~/welcome.sh
+    else
+        echo "[TEST] Would install new ~/welcome.sh"
+        rm "$TEMP_FILE"
+    fi
 fi
 
-# Ensure script is hooked into ~/.bashrc
+# Ensure script is hooked into shell rc files
 echo "[+] Ensuring welcome script runs at login"
-if ! grep -q "~/welcome.sh" ~/.bashrc; then
-    echo "~/welcome.sh" >> ~/.bashrc
-else
-    echo "[-] Hook already exists in ~/.bashrc"
+
+# Hook into .bashrc
+if [[ -f ~/.bashrc ]]; then
+    if ! grep -q "~/welcome.sh" ~/.bashrc; then
+        if [[ "$TEST_MODE" == "false" ]]; then
+            echo "~/welcome.sh" >> ~/.bashrc
+            echo "[✓] Added hook to ~/.bashrc"
+        else
+            echo "[TEST] Would add hook to ~/.bashrc"
+        fi
+    else
+        echo "[-] Hook already exists in ~/.bashrc"
+    fi
+fi
+
+# Hook into .zshrc (ZSH support)
+if [[ -f ~/.zshrc ]]; then
+    if ! grep -q "~/welcome.sh" ~/.zshrc; then
+        if [[ "$TEST_MODE" == "false" ]]; then
+            echo "~/welcome.sh" >> ~/.zshrc
+            echo "[✓] Added hook to ~/.zshrc"
+        else
+            echo "[TEST] Would add hook to ~/.zshrc"
+        fi
+    else
+        echo "[-] Hook already exists in ~/.zshrc"
+    fi
+fi
+
+# Create default config if it doesn't exist
+CONFIG_DIR="$HOME/.config/welcome.sh"
+CONFIG_FILE="$CONFIG_DIR/config"
+
+if [[ ! -f "$CONFIG_FILE" ]]; then
+    if [[ "$TEST_MODE" == "false" ]]; then
+        mkdir -p "$CONFIG_DIR"
+        cat > "$CONFIG_FILE" << 'EOF'
+# Welcome.sh Configuration File
+# 
+# Customize your welcome message by uncommenting and modifying these options:
+
+# Show fastfetch system info
+#SHOW_FASTFETCH=true
+
+# Show weather information
+#SHOW_WEATHER=true
+
+# Show public IP address
+#SHOW_PUBLIC_IP=true
+
+# Show system metrics (memory, CPU usage)
+#SHOW_SYSTEM_METRICS=true
+
+# Show ASCII art banner
+#SHOW_ASCII_ART=false
+
+# Quiet mode (minimal output)
+#QUIET_MODE=false
+
+# Weather location (default: Lake+City)
+# Use format: "City+Name" or leave empty for default
+#WEATHER_LOCATION=""
+
+# Cache timeout in seconds (default: 3600 = 1 hour)
+#CACHE_TIMEOUT=3600
+
+# Request timeout for external calls (default: 3 seconds)
+#REQUEST_TIMEOUT=3
+EOF
+        echo "[✓] Created default configuration at ${CONFIG_FILE}"
+        echo "[i] Edit ${CONFIG_FILE} to customize your welcome message"
+    else
+        echo "[TEST] Would create default configuration"
+    fi
 fi
 
 echo ""
-echo "[✓] Welcome message installed. Open a new terminal or SSH session to see it."
+if [[ "$TEST_MODE" == "false" ]]; then
+    echo "[✓] Welcome message installed. Open a new terminal or SSH session to see it."
+    echo "[i] Configuration: ${CONFIG_FILE}"
+    echo "[i] To uninstall, run: curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh | bash -s -- --uninstall"
+else
+    echo "[✓] Test mode completed. No changes were made."
+fi

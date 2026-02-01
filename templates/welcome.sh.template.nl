@@ -1,6 +1,73 @@
 #!/bin/bash
+
+CONFIG_DIR="$HOME/.config/welcome.sh"
+CONFIG_FILE="$CONFIG_DIR/config"
+CACHE_DIR="$HOME/.cache/welcome.sh"
+
+SHOW_FASTFETCH=true
+SHOW_WEATHER=true
+SHOW_PUBLIC_IP=true
+SHOW_SYSTEM_METRICS=true
+SHOW_ASCII_ART=false
+QUIET_MODE=false
+WEATHER_LOCATION=""
+CACHE_TIMEOUT=3600
+REQUEST_TIMEOUT=3
+
+[[ -f "$CONFIG_FILE" ]] && source "$CONFIG_FILE"
+mkdir -p "$CACHE_DIR"
+
+CYAN="\033[1;36m"
+YELLOW="\033[1;33m"
+GREEN="\033[1;32m"
+RED="\033[1;31m"
+BLUE="\033[1;34m"
+MAGENTA="\033[1;35m"
+NC="\033[0m"
+
+if [[ "$SHOW_ASCII_ART" == "true" ]]; then
+    echo -e "${CYAN}"
+    cat << "EOF"
+ ██╗    ██╗███████╗██╗      ██████╗ ██████╗ ███╗   ███╗███████╗
+ ██║    ██║██╔════╝██║     ██╔════╝██╔═══██╗████╗ ████║██╔════╝
+ ██║ █╗ ██║█████╗  ██║     ██║     ██║   ██║██╔████╔██║█████╗  
+ ██║███╗██║██╔══╝  ██║     ██║     ██║   ██║██║╚██╔╝██║██╔══╝  
+ ╚███╔███╔╝███████╗███████╗╚██████╗╚██████╔╝██║ ╚═╝ ██║███████╗
+  ╚══╝╚══╝ ╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝
+EOF
+    echo -e "${NC}"
+fi
+
+get_temp() {
+    if [[ -f /sys/class/thermal/thermal_zone0/temp ]]; then
+        temp_millidegree=$(cat /sys/class/thermal/thermal_zone0/temp)
+        echo "$((temp_millidegree/1000))°C"
+    elif command -v sensors >/dev/null 2>&1; then
+        sensors 2>/dev/null | grep -i "Package id 0\|Core 0\|temp1" | head -n 1 | awk '{print $2}' | sed 's/+//'
+    else
+        echo "N/A"
+    fi
+}
+
+get_cached() {
+    local cache_file="$1"
+    local max_age="$2"
+    if [[ -f "$cache_file" ]]; then
+        local file_age=$(($(date +%s) - $(stat -f%m "$cache_file" 2>/dev/null || stat -c%Y "$cache_file" 2>/dev/null)))
+        if [[ $file_age -lt $max_age ]]; then
+            cat "$cache_file"
+            return 0
+        fi
+    fi
+    return 1
+}
+
+set_cached() {
+    echo "$2" > "$1"
+}
+
 clear
-command -v fastfetch >/dev/null && fastfetch -c all
+[[ "$SHOW_FASTFETCH" == "true" ]] && command -v fastfetch >/dev/null && fastfetch -c all
 
 CYAN="\033[1;36m"
 YELLOW="\033[1;33m"
@@ -11,18 +78,38 @@ NC="\033[0m"
 echo -e "${CYAN}Hallo, $USER!${NC}"
 echo -e "${YELLOW}Uptime: $(uptime -p) | Gemiddelde belasting: $(cut -d ' ' -f1-3 /proc/loadavg)${NC}"
 
-PUBIP=$(curl -s ifconfig.me)
-echo -e "${GREEN}Openbaar IP-adres: $PUBIP${NC}"
+if [[ "$SHOW_PUBLIC_IP" == "true" ]]; then
+    PUBIP_CACHE="$CACHE_DIR/public_ip"
+    PUBIP=$(get_cached "$PUBIP_CACHE" "$CACHE_TIMEOUT")
+    if [[ $? -ne 0 ]]; then
+        PUBIP=$(timeout "$REQUEST_TIMEOUT" curl -s ifconfig.me 2>/dev/null || echo "N/A")
+        [[ "$PUBIP" != "N/A" ]] && set_cached "$PUBIP_CACHE" "$PUBIP"
+    fi
+    echo -e "${GREEN}Openbaar IP-adres: $PUBIP${NC}"
+fi
 
-echo -e "${CYAN}Schijfgebruik op /:$(df -h / | awk 'NR==2 {print \" \" $3 \" gebruikt van \" $2 \" (\" $5 \")\"}')${NC}"
+echo -e "${CYAN}Schijfgebruik op /:$(df -h / | awk 'NR==2 {print " " $3 " gebruikt van " $2 " (" $5 ")"}'${NC}"
+
+if [[ "$SHOW_SYSTEM_METRICS" == "true" ]]; then
+    if command -v free >/dev/null 2>&1; then
+        MEM_INFO=$(free -h | awk 'NR==2 {printf "Gebruikt: %s / %s (%.0f%%)", $3, $2, ($3/$2)*100}')
+        echo -e "${BLUE}Geheugen: $MEM_INFO${NC}"
+    fi
+    if [[ "$QUIET_MODE" != "true" ]] && command -v ps >/dev/null 2>&1; then
+        TOP_CPU=$(ps aux --sort=-%cpu | awk 'NR==2 {printf "%s (%.1f%%)", $11, $3}')
+        echo -e "${MAGENTA}Top CPU: $TOP_CPU${NC}"
+    fi
+fi
 
 if command -v apt >/dev/null 2>&1; then
     UPDATES=$(apt list --upgradeable 2>/dev/null | grep -v "Listing..." | wc -l)
-    if [ "$UPDATES" -gt 0 ]; then
-        echo -e "${RED}Beschikbare updates: $UPDATES pakket(ten)${NC}"
-    else
-        echo -e "${GREEN}Je systeem is up-to-date.${NC}"
-    fi
+    [ "$UPDATES" -gt 0 ] && echo -e "${RED}Beschikbare updates: $UPDATES pakket(ten)${NC}" || echo -e "${GREEN}Je systeem is up-to-date.${NC}"
+elif command -v dnf >/dev/null 2>&1; then
+    UPDATES=$(dnf check-update -q 2>/dev/null | grep -v "^$" | wc -l)
+    [[ "$UPDATES" -gt 0 ]] && echo -e "${RED}Beschikbare updates: $UPDATES pakket(ten)${NC}" || echo -e "${GREEN}Je systeem is up-to-date.${NC}"
+elif command -v pacman >/dev/null 2>&1; then
+    UPDATES=$(pacman -Qu 2>/dev/null | wc -l)
+    [[ "$UPDATES" -gt 0 ]] && echo -e "${RED}Beschikbare updates: $UPDATES pakket(ten)${NC}" || echo -e "${GREEN}Je systeem is up-to-date.${NC}"
 fi
 
 if [ -f /var/run/reboot-required ]; then
@@ -33,8 +120,14 @@ fi
 TEMP=$(get_temp)
 echo -e "${CYAN}CPU-temperatuur: $TEMP${NC}"
 
-# Beperkingen: alleen als /dev/vcio bestaat en vcgencmd geldige gegevens teruggeeft
-if [[ -e /dev/vcio ]] && command -v vcgencmd >/dev/null 2>&1; then
+IS_RPI=false
+if [[ -f /proc/device-tree/model ]] && grep -qi "raspberry pi" /proc/device-tree/model 2>/dev/null; then
+    IS_RPI=true
+elif [[ -f /boot/config.txt ]] || [[ -f /boot/firmware/config.txt ]]; then
+    IS_RPI=true
+fi
+
+if [[ "$IS_RPI" == "true" ]] && command -v vcgencmd >/dev/null 2>&1; then
     RAW_OUTPUT=$(vcgencmd get_throttled 2>/dev/null || true)
     if [[ "$RAW_OUTPUT" == throttled=* ]]; then
         THROTTLED_RAW=$(echo "$RAW_OUTPUT" | cut -d= -f2)
@@ -44,13 +137,18 @@ if [[ -e /dev/vcio ]] && command -v vcgencmd >/dev/null 2>&1; then
             THROTTLE_STATUS="${GREEN}Nee${NC}"
         fi
         echo -e "${CYAN}Beperkt: $THROTTLE_STATUS${NC}"
-    else
-        echo -e "${CYAN}Beperkt: ${YELLOW}Overgeslagen (ongeldige uitvoer van vcgencmd)${NC}"
     fi
 fi
 
-# --- Weer ---
-WEATHER=$(curl -s 'wttr.in/Lake+City?format=3')
-echo -e "${YELLOW}Weer: $WEATHER${NC}"
+if [[ "$SHOW_WEATHER" == "true" ]]; then
+    WEATHER_CACHE="$CACHE_DIR/weather"
+    WEATHER=$(get_cached "$WEATHER_CACHE" "$CACHE_TIMEOUT")
+    if [[ $? -ne 0 ]]; then
+        LOCATION="${WEATHER_LOCATION:-Lake+City}"
+        WEATHER=$(timeout "$REQUEST_TIMEOUT" curl -s "wttr.in/${LOCATION}?format=3" 2>/dev/null || echo "N/A")
+        [[ "$WEATHER" != "N/A" ]] && set_cached "$WEATHER_CACHE" "$WEATHER"
+    fi
+    echo -e "${YELLOW}Weer: $WEATHER${NC}"
+fi
 
 echo -e "${YELLOW}Alles is klaar voor Whiskey, Tango, Foxtrot!${NC}"
