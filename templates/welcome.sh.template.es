@@ -40,19 +40,20 @@ fi
 
 get_temp() {
     if [[ -r /sys/class/thermal/thermal_zone0/temp ]]; then
-        temp_millidegree=$(cat /sys/class/thermal/thermal_zone0/temp)
+        temp_millidegree=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null)
         if [[ -n "$temp_millidegree" && "$temp_millidegree" != "0" ]]; then
             echo "$((temp_millidegree/1000))°C"
-        elif command -v sensors >/dev/null 2>&1; then
-            sensors 2>/dev/null | grep -i "Package id 0\|Core 0\|temp1" | head -n 1 | awk '{print $2}' | sed 's/+//'
-        else
-            echo "N/A"
+            return
         fi
-    elif command -v sensors >/dev/null 2>&1; then
-        sensors 2>/dev/null | grep -i "Package id 0\|Core 0\|temp1" | head -n 1 | awk '{print $2}' | sed 's/+//'
-    else
-        echo "N/A"
     fi
+    
+    # Fallback to sensors
+    if command -v sensors >/dev/null 2>&1; then
+        sensors 2>/dev/null | grep -i "Package id 0\|Core 0\|temp1" | head -n 1 | awk '{print $2}' | sed 's/+//'
+        return
+    fi
+    
+    echo "N/A"
 }
 
 get_cached() {
