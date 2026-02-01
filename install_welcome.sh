@@ -147,7 +147,7 @@ if [[ "$NO_DEPS" == "false" ]]; then
         if [[ "$TEST_MODE" == "false" ]]; then
             # Allow apt update to continue even if third-party repos have signature issues
             # Suppress warnings from third-party repos with signature verification failures
-            if ! sudo apt-get update -y 2>/dev/null; then
+            if ! sudo apt-get update -y &>/dev/null; then
                 echo "[!] apt update reported errors (likely third-party repo). Continuing..."
             fi
             sudo apt-get install -y curl
@@ -233,7 +233,7 @@ install_fastfetch() {
                         sudo apt-get install -y software-properties-common
                         sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch
                         # Suppress warnings from apt update during PPA addition
-                        sudo apt-get update 2>/dev/null || true
+                        sudo apt-get update &>/dev/null || true
                         if ! sudo apt-get install -y fastfetch; then
                             echo "[!] Failed to install fastfetch even with PPA."
                         else
