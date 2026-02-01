@@ -231,11 +231,11 @@ install_fastfetch() {
                     # If that fails and it's Ubuntu 22+, try PPA
                     if [[ "$ID" == "ubuntu" && "${VERSION_ID%%.*}" -ge 22 ]]; then
                         echo "[!] fastfetch not found in default repos, trying PPA..."
-                        sudo apt-get install -y software-properties-common
-                        sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch
+                        sudo apt-get install -y software-properties-common 2>/dev/null
+                        sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch 2>/dev/null
                         # Suppress warnings from apt update during PPA addition
                         sudo apt-get update &>/dev/null || true
-                        if ! sudo apt-get install -y fastfetch; then
+                        if ! sudo apt-get install -y fastfetch 2>/dev/null; then
                             echo "[!] Failed to install fastfetch even with PPA."
                         else
                             echo "[✓] fastfetch installed from PPA."
