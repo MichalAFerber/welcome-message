@@ -2,6 +2,25 @@
 
 All notable changes to the Custom Linux Welcome Message project will be documented in this file.
 
+## [2.0.1] - 2026-01-31
+
+### 🐛 Bug Fixes
+
+- **macOS Language Detection** - Fixed language code parsing to handle quotes in locale output
+- **macOS Package Manager** - Gracefully skip Linux package managers on macOS with helpful instructions
+- **macOS Fastfetch Installation** - Skip auto-install on macOS, provide Homebrew instructions
+
+### 📚 Documentation
+
+- Added macOS installation guide to README
+- Created MACOS_FIX.md documenting compatibility improvements
+
+### ✨ Improvements
+
+- Better error messages for unsupported systems
+- Added OS detection using `uname`
+- Improved locale parsing with quote and space handling
+
 ## [2.0.0] - 2026-01-31
 
 ### 🎉 Major Release - Complete Overhaul

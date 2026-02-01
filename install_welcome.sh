@@ -109,7 +109,10 @@ if [[ "$UNINSTALL" == "true" ]]; then
 fi
 
 DEFAULT_LANG="en"
-LANG_CODE=$(locale | grep LANG= | cut -d= -f2 | cut -d_ -f1 | sed 's/C/en/')
+# Extract language code, handling quotes and special characters
+LANG_CODE=$(locale 2>/dev/null | grep LANG= | cut -d= -f2 | tr -d '"' | cut -d_ -f1 | sed 's/C/en/' | tr -d ' ')
+# Fallback to en if extraction failed
+[[ -z "$LANG_CODE" ]] && LANG_CODE="$DEFAULT_LANG"
 TEMPLATE_PATH="https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/templates/welcome.sh.template.${LANG_CODE}"
 
 # Fallback if specific language template is not found
@@ -126,11 +129,21 @@ fi
 
 echo "[+] Detected system language: ${LANG_CODE}"
 
+# Detect operating system
+OS_TYPE="$(uname -s)"
+IS_MACOS=false
+[[ "$OS_TYPE" == "Darwin" ]] && IS_MACOS=true
+
 if [[ "$NO_DEPS" == "false" ]]; then
     echo "[+] Installing required packages..."
 
-    # Detect package manager and install dependencies
-    if command -v apt-get >/dev/null 2>&1; then
+    # Skip package manager installation on macOS - users should use Homebrew
+    if [[ "$IS_MACOS" == "true" ]]; then
+        echo "[i] macOS detected - skipping package manager install"
+        echo "[i] Please ensure curl and fastfetch are installed:"
+        echo "[i]   brew install curl fastfetch"
+    # Detect package manager and install dependencies on Linux
+    elif command -v apt-get >/dev/null 2>&1; then
         [[ "$TEST_MODE" == "false" ]] && sudo apt-get update -y
         [[ "$TEST_MODE" == "false" ]] && sudo apt-get install -y curl || echo "[TEST] Would install curl with apt"
     elif command -v dnf >/dev/null 2>&1; then
@@ -142,7 +155,7 @@ if [[ "$NO_DEPS" == "false" ]]; then
     elif command -v zypper >/dev/null 2>&1; then
         [[ "$TEST_MODE" == "false" ]] && sudo zypper install -y curl || echo "[TEST] Would install curl with zypper"
     else
-        echo "[!] Unknown package manager. Please install curl manually."
+        echo "[!] Unknown package manager. Please ensure curl is installed."
     fi
 
     # Improved Raspberry Pi detection
@@ -177,6 +190,13 @@ install_fastfetch() {
     fi
 
     echo "[+] Attempting to install fastfetch..."
+
+    # Skip on macOS - user should use Homebrew
+    if [[ "$IS_MACOS" == "true" ]]; then
+        echo "[i] macOS detected - skipping auto-install"
+        echo "[i] Install with: brew install fastfetch"
+        return
+    fi
 
     if [[ -f /etc/os-release ]]; then
         . /etc/os-release
@@ -213,7 +233,7 @@ install_fastfetch() {
     fi
 }
 
-if [[ "$NO_DEPS" == "false" ]]; then
+if [[ "$NO_DEPS" == "false" ]] && [[ "$IS_MACOS" != "true" ]]; then
     install_fastfetch
 fi
 

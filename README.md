@@ -125,12 +125,28 @@ Cache files are stored in: `~/.cache/welcome.sh/`
 
 ## 🐧 Distribution Support
 
-### Supported Package Managers
+### Supported Platforms
+- **Linux**: Ubuntu, Debian, Fedora, RHEL, CentOS, Arch Linux, Manjaro, openSUSE, SUSE Linux, Raspberry Pi OS
+- **macOS**: Fully compatible with Bash and Zsh (Homebrew installation recommended)
+
+### Supported Package Managers (Linux)
 - **APT** (Debian, Ubuntu, Raspberry Pi OS)
 - **DNF** (Fedora, RHEL 8+)
 - **YUM** (CentOS, RHEL 7)
 - **Pacman** (Arch Linux, Manjaro)
 - **Zypper** (openSUSE, SUSE Linux)
+
+### macOS Installation
+On macOS, please install dependencies via Homebrew:
+
+```bash
+brew install curl fastfetch
+```
+
+Then run the installer:
+```bash
+curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh | bash
+```
 
 ### Raspberry Pi
 Improved detection using multiple methods:
