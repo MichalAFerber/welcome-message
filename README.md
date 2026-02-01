@@ -280,6 +280,15 @@ Pull requests are welcome! Especially for:
 - Manually install: `sudo apt install fastfetch` or check your distro's package manager
 - On older Ubuntu: The installer will try to add the PPA automatically
 
+### Apt signature verification warnings
+You may see warnings like `W: An error occurred during signature verification` during installation on systems with third-party repositories (e.g., NodeSource for Node.js). These warnings are:
+- **Not caused by the welcome-message installer**
+- Typically from deprecated SHA1 signatures in third-party repos
+- Safe to ignore — they don't affect the welcome-message installation
+- The installer handles these gracefully and will continue normally
+
+These are system-level warnings from your package manager when updating repository metadata, not from this project.
+
 ## 📄 License
 
 [MIT License](LICENSE)

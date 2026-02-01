@@ -144,8 +144,15 @@ if [[ "$NO_DEPS" == "false" ]]; then
         echo "[i]   brew install curl fastfetch"
     # Detect package manager and install dependencies on Linux
     elif command -v apt-get >/dev/null 2>&1; then
-        [[ "$TEST_MODE" == "false" ]] && sudo apt-get update -y
-        [[ "$TEST_MODE" == "false" ]] && sudo apt-get install -y curl || echo "[TEST] Would install curl with apt"
+        if [[ "$TEST_MODE" == "false" ]]; then
+            # Allow apt update to continue even if third-party repos have signature issues
+            if ! sudo apt-get update -y; then
+                echo "[!] apt update reported errors (likely third-party repo). Continuing..."
+            fi
+            sudo apt-get install -y curl
+        else
+            echo "[TEST] Would install curl with apt"
+        fi
     elif command -v dnf >/dev/null 2>&1; then
         [[ "$TEST_MODE" == "false" ]] && sudo dnf install -y curl || echo "[TEST] Would install curl with dnf"
     elif command -v yum >/dev/null 2>&1; then
@@ -170,7 +177,18 @@ if [[ "$NO_DEPS" == "false" ]]; then
     if [[ "$IS_RPI" == "true" ]]; then
         echo "[i] Raspberry Pi detected"
         if command -v apt-get >/dev/null 2>&1; then
-            [[ "$TEST_MODE" == "false" ]] && sudo apt-get install -y libraspberrypi-bin || echo "[TEST] Would install libraspberrypi-bin"
+            if [[ "$TEST_MODE" == "false" ]]; then
+                # libraspberrypi-bin is deprecated on newer Raspberry Pi OS
+                if ! sudo apt-get install -y libraspberrypi-bin; then
+                    echo "[i] libraspberrypi-bin not available, trying raspi-utils-core"
+                    if ! sudo apt-get install -y raspi-utils-core; then
+                        echo "[i] raspi-utils-core not available, trying raspi-utils-dt"
+                        sudo apt-get install -y raspi-utils-dt || echo "[!] Failed to install Raspberry Pi utilities."
+                    fi
+                fi
+            else
+                echo "[TEST] Would install Raspberry Pi utilities"
+            fi
         fi
     fi
 else
