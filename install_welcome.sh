@@ -146,7 +146,8 @@ if [[ "$NO_DEPS" == "false" ]]; then
     elif command -v apt-get >/dev/null 2>&1; then
         if [[ "$TEST_MODE" == "false" ]]; then
             # Allow apt update to continue even if third-party repos have signature issues
-            if ! sudo apt-get update -y; then
+            # Suppress warnings from third-party repos with signature verification failures
+            if ! sudo apt-get update -y 2>/dev/null; then
                 echo "[!] apt update reported errors (likely third-party repo). Continuing..."
             fi
             sudo apt-get install -y curl
@@ -231,7 +232,8 @@ install_fastfetch() {
                         echo "[!] fastfetch not found in default repos, trying PPA..."
                         sudo apt-get install -y software-properties-common
                         sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch
-                        sudo apt-get update
+                        # Suppress warnings from apt update during PPA addition
+                        sudo apt-get update 2>/dev/null || true
                         if ! sudo apt-get install -y fastfetch; then
                             echo "[!] Failed to install fastfetch even with PPA."
                         else
