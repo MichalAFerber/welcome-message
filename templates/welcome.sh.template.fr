@@ -66,6 +66,34 @@ set_cached() {
     echo "$2" > "$1"
 }
 
+OS_TYPE="$(uname -s)"
+IS_MACOS=false
+[[ "$OS_TYPE" == "Darwin" ]] && IS_MACOS=true
+
+get_uptime() {
+    if [[ "$IS_MACOS" == "true" ]]; then
+        uptime | sed 's/.*up \(.*\), [0-9]* users.*/\1/' | sed 's/ *$//' || echo "N/A"
+    else
+        uptime -p 2>/dev/null || echo "N/A"
+    fi
+}
+
+get_load_average() {
+    if [[ "$IS_MACOS" == "true" ]]; then
+        uptime | awk -F'load average:' '{print $2}' | sed 's/^ *//' || echo "N/A"
+    else
+        cut -d ' ' -f1-3 /proc/loadavg 2>/dev/null || echo "N/A"
+    fi
+}
+
+get_top_cpu() {
+    if [[ "$IS_MACOS" == "true" ]]; then
+        ps -A -o %cpu=,comm= 2>/dev/null | sort -rn | head -n1 | awk '{printf "%s (%.1f%%)", $2, $1}' || echo ""
+    else
+        ps aux --sort=-%cpu 2>/dev/null | awk 'NR==2 {printf "%s (%.1f%%)", $11, $3}' || echo ""
+    fi
+}
+
 clear
 [[ "$SHOW_FASTFETCH" == "true" ]] && command -v fastfetch >/dev/null && fastfetch -c all
 
@@ -76,7 +104,7 @@ RED="\033[1;31m"
 NC="\033[0m"
 
 echo -e "${CYAN}Bonjour, $USER !${NC}"
-echo -e "${YELLOW}Temps de fonctionnement : $(uptime -p) | Charge moyenne : $(cut -d ' ' -f1-3 /proc/loadavg)${NC}"
+echo -e "${YELLOW}Temps de fonctionnement : $(get_uptime) | Charge moyenne : $(get_load_average)${NC}"
 
 if [[ "$SHOW_PUBLIC_IP" == "true" ]]; then
     PUBIP_CACHE="$CACHE_DIR/public_ip"
@@ -94,10 +122,14 @@ if [[ "$SHOW_SYSTEM_METRICS" == "true" ]]; then
     if command -v free >/dev/null 2>&1; then
         MEM_INFO=$(free -h | awk 'NR==2 {printf "Utilisé : %s / %s (%.0f%%)", $3, $2, ($3/$2)*100}')
         echo -e "${BLUE}Mémoire : $MEM_INFO${NC}"
+    elif [[ "$IS_MACOS" == "true" ]]; then
+        MEM_INFO=$(vm_stat 2>/dev/null | awk '/^Pages free:/ {free=$3} /^Pages active:/ {active=$3} /^Pages inactive:/ {inactive=$3} END {total=8*1024; used=active+inactive; printf "Utilisé : %.2f GiB / 8.00 GiB (%.0f%%)", used/1024/1024, (used/(used+free))*100}')
+        echo -e "${BLUE}Mémoire : $MEM_INFO${NC}"
     fi
-    if [[ "$QUIET_MODE" != "true" ]] && command -v ps >/dev/null 2>&1; then
-        TOP_CPU=$(ps aux --sort=-%cpu | awk 'NR==2 {printf "%s (%.1f%%)", $11, $3}')
-        echo -e "${MAGENTA}Top CPU : $TOP_CPU${NC}"
+    if [[ "$QUIET_MODE" != "true" ]]; then
+        TOP_CPU=$(get_top_cpu)
+        [[ -n "$TOP_CPU" ]] && echo -e "${MAGENTA}Top CPU : $TOP_CPU${NC}"
+    fi
     fi
 fi
 

@@ -9,17 +9,32 @@ All notable changes to the Custom Linux Welcome Message project will be document
 - **macOS Language Detection** - Fixed language code parsing to handle quotes in locale output
 - **macOS Package Manager** - Gracefully skip Linux package managers on macOS with helpful instructions
 - **macOS Fastfetch Installation** - Skip auto-install on macOS, provide Homebrew instructions
+- **macOS Uptime Command** - Fixed `uptime -p` compatibility (not available on macOS)
+- **macOS Load Average** - Fixed `/proc/loadavg` compatibility (not available on macOS)
+- **macOS Process Commands** - Fixed `ps --sort` syntax for macOS compatibility
+- **macOS Memory Display** - Added `vm_stat` support for accurate memory reporting
+
+### ✨ Features
+
+- **macOS Full Support** - Complete compatibility with Bash and Zsh on macOS
+- **OS Detection** - Automatic detection of macOS using `uname -s`
+- **Cross-Platform Functions** - Helper functions for uptime, load average, and top CPU process
+- **macOS Memory Reporting** - Accurate memory display using `vm_stat` on macOS
 
 ### 📚 Documentation
 
-- Added macOS installation guide to README
-- Created MACOS_FIX.md documenting compatibility improvements
+- Added comprehensive macOS installation guide to README
+- Added Homebrew installation instructions
+- Updated QUICKSTART with macOS-specific steps
+- Created MACOS_FIX.md documenting all compatibility improvements
+- Updated README title to include macOS
 
 ### ✨ Improvements
 
 - Better error messages for unsupported systems
 - Added OS detection using `uname`
 - Improved locale parsing with quote and space handling
+- Cross-platform helper functions for system metrics
 
 ## [2.0.0] - 2026-01-31
 

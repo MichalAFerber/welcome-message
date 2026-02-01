@@ -1,8 +1,8 @@
-# 🖥️ Custom Linux Welcome Message
+# 🖥️ Custom Welcome Message for Linux & macOS
 
 ![screenshot](welcome-message-preview.png)
 
-Easily add a beautiful, dynamic welcome message to your Linux shell—complete with Fastfetch system stats, public IP, disk usage, weather, and multi-language support.
+Easily add a beautiful, dynamic welcome message to your Linux or macOS shell—complete with system stats, public IP, disk usage, weather, and multi-language support.
 
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
@@ -137,16 +137,25 @@ Cache files are stored in: `~/.cache/welcome.sh/`
 - **Zypper** (openSUSE, SUSE Linux)
 
 ### macOS Installation
-On macOS, please install dependencies via Homebrew:
+
+On macOS, you'll need **Homebrew** to install dependencies. If you don't have Homebrew installed yet:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Then install the required dependencies:
 
 ```bash
 brew install curl fastfetch
 ```
 
-Then run the installer:
+Finally, run the installer:
 ```bash
 curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh | bash
 ```
+
+**Note:** The installer will automatically detect macOS and skip Linux-specific package managers. Just ensure `curl` and `fastfetch` are installed via Homebrew first.
 
 ### Raspberry Pi
 Improved detection using multiple methods:

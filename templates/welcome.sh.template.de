@@ -85,7 +85,7 @@ RED="\033[1;31m"
 NC="\033[0m"
 
 echo -e "${CYAN}Hallo, $USER!${NC}"
-echo -e "${YELLOW}Betriebszeit: $(uptime -p) | Durchschnittslast: $(cut -d ' ' -f1-3 /proc/loadavg)${NC}"
+echo -e "${YELLOW}Betriebszeit: $(get_uptime) | Durchschnittslast: $(get_load_average)${NC}"
 
 if [[ "$SHOW_PUBLIC_IP" == "true" ]]; then
     PUBIP_CACHE="$CACHE_DIR/public_ip"
@@ -103,10 +103,13 @@ if [[ "$SHOW_SYSTEM_METRICS" == "true" ]]; then
     if command -v free >/dev/null 2>&1; then
         MEM_INFO=$(free -h | awk 'NR==2 {printf "Verwendet: %s / %s (%.0f%%)", $3, $2, ($3/$2)*100}')
         echo -e "${BLUE}Speicher: $MEM_INFO${NC}"
+    elif [[ "$IS_MACOS" == "true" ]]; then
+        MEM_INFO=$(vm_stat 2>/dev/null | awk '/^Pages free:/ {free=$3} /^Pages active:/ {active=$3} /^Pages inactive:/ {inactive=$3} END {total=8*1024; used=active+inactive; printf "Verwendet: %.2f GiB / 8.00 GiB (%.0f%%)", used/1024/1024, (used/(used+free))*100}')
+        echo -e "${BLUE}Speicher: $MEM_INFO${NC}"
     fi
-    if [[ "$QUIET_MODE" != "true" ]] && command -v ps >/dev/null 2>&1; then
-        TOP_CPU=$(ps aux --sort=-%cpu | awk 'NR==2 {printf "%s (%.1f%%)", $11, $3}')
-        echo -e "${MAGENTA}Top CPU: $TOP_CPU${NC}"
+    if [[ "$QUIET_MODE" != "true" ]]; then
+        TOP_CPU=$(get_top_cpu)
+        [[ -n "$TOP_CPU" ]] && echo -e "${MAGENTA}Top CPU: $TOP_CPU${NC}"
     fi
 fi
 

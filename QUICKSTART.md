@@ -4,9 +4,24 @@ Get up and running with Custom Linux Welcome Message in under 2 minutes!
 
 ## 📦 Installation
 
-### One-Line Install
+### Linux (Ubuntu, Debian, Fedora, Arch, etc.)
 
 ```bash
+curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh | bash
+```
+
+### macOS
+
+First, install **Homebrew** (if not already installed):
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Then install dependencies and the welcome message:
+
+```bash
+brew install curl fastfetch
 curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh | bash
 ```
 
