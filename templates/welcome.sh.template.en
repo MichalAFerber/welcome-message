@@ -51,9 +51,15 @@ clear
 
 # Helper function to get temperature
 get_temp() {
-    if [[ -f /sys/class/thermal/thermal_zone0/temp ]]; then
+    if [[ -r /sys/class/thermal/thermal_zone0/temp ]]; then
         temp_millidegree=$(cat /sys/class/thermal/thermal_zone0/temp)
-        echo "$((temp_millidegree/1000))°C"
+        if [[ -n "$temp_millidegree" && "$temp_millidegree" != "0" ]]; then
+            echo "$((temp_millidegree/1000))°C"
+        elif command -v sensors >/dev/null 2>&1; then
+            sensors 2>/dev/null | grep -i "Package id 0\|Core 0\|temp1" | head -n 1 | awk '{print $2}' | sed 's/+//'
+        else
+            echo "N/A"
+        fi
     elif command -v sensors >/dev/null 2>&1; then
         sensors 2>/dev/null | grep -i "Package id 0\|Core 0\|temp1" | head -n 1 | awk '{print $2}' | sed 's/+//'
     else
