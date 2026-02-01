@@ -150,7 +150,7 @@ if [[ "$NO_DEPS" == "false" ]]; then
             if ! sudo apt-get update -y &>/dev/null; then
                 echo "[!] apt update reported errors (likely third-party repo). Continuing..."
             fi
-            sudo apt-get install -y curl
+            sudo apt-get install -y curl &>/dev/null || true
         else
             echo "[TEST] Would install curl with apt"
         fi
@@ -179,13 +179,12 @@ if [[ "$NO_DEPS" == "false" ]]; then
         echo "[i] Raspberry Pi detected"
         if command -v apt-get >/dev/null 2>&1; then
             if [[ "$TEST_MODE" == "false" ]]; then
-                # libraspberrypi-bin is deprecated on newer Raspberry Pi OS
-                # Suppress error output when trying deprecated package
-                if ! sudo apt-get install -y libraspberrypi-bin 2>/dev/null; then
-                    echo "[i] libraspberrypi-bin not available, trying raspi-utils-core"
-                    if ! sudo apt-get install -y raspi-utils-core 2>/dev/null; then
-                        echo "[i] raspi-utils-core not available, trying raspi-utils-dt"
-                        sudo apt-get install -y raspi-utils-dt 2>/dev/null || echo "[!] Failed to install Raspberry Pi utilities."
+                # Raspberry Pi utilities: try newer raspi-utils first, then fall back to deprecated libraspberrypi-bin
+                if ! sudo apt-get install -y raspi-utils-core &>/dev/null; then
+                    echo "[i] raspi-utils-core not available, trying raspi-utils-dt"
+                    if ! sudo apt-get install -y raspi-utils-dt &>/dev/null; then
+                        echo "[i] raspi-utils packages not available, trying libraspberrypi-bin (deprecated)"
+                        sudo apt-get install -y libraspberrypi-bin &>/dev/null || echo "[!] Failed to install Raspberry Pi utilities."
                     fi
                 fi
             else
@@ -225,17 +224,17 @@ install_fastfetch() {
         if [[ "$ID" == "ubuntu" ]] || [[ "$ID" == "debian" ]] || [[ "$ID" == "raspbian" ]]; then
             if [[ "$TEST_MODE" == "false" ]]; then
                 # Try direct install first
-                if sudo apt-get install -y fastfetch 2>/dev/null; then
+                if sudo apt-get install -y fastfetch &>/dev/null; then
                     echo "[✓] fastfetch installed from official repo."
                 else
                     # If that fails and it's Ubuntu 22+, try PPA
                     if [[ "$ID" == "ubuntu" && "${VERSION_ID%%.*}" -ge 22 ]]; then
                         echo "[!] fastfetch not found in default repos, trying PPA..."
-                        sudo apt-get install -y software-properties-common 2>/dev/null
-                        sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch 2>/dev/null
+                        sudo apt-get install -y software-properties-common &>/dev/null
+                        sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch &>/dev/null
                         # Suppress warnings from apt update during PPA addition
                         sudo apt-get update &>/dev/null || true
-                        if ! sudo apt-get install -y fastfetch 2>/dev/null; then
+                        if ! sudo apt-get install -y fastfetch &>/dev/null; then
                             echo "[!] Failed to install fastfetch even with PPA."
                         else
                             echo "[✓] fastfetch installed from PPA."
