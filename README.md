@@ -60,7 +60,7 @@ After installation, customize your welcome message by editing:
 SHOW_FASTFETCH=true          # Show fastfetch system info
 SHOW_WEATHER=true            # Show weather from wttr.in
 SHOW_PUBLIC_IP=true          # Show your public IP address
-SHOW_SYSTEM_METRICS=true     # Show memory and CPU usage
+SHOW_SYSTEM_METRICS=true     # Show disk usage, memory, CPU temp, and top process
 SHOW_ASCII_ART=false         # Show ASCII art banner
 QUIET_MODE=false             # Minimal output for faster loading
 
@@ -176,13 +176,15 @@ Ubuntu 22.04+ users benefit from a Fastfetch PPA for latest builds.
 
 ## � System Metrics Dashboard
 
-The welcome message now includes:
-- **Memory Usage**: Shows used/total memory with percentage
-- **Top CPU Process**: Displays the most CPU-intensive process
-- **Disk Usage**: Detailed disk space information
+When `SHOW_SYSTEM_METRICS=true`, the welcome message includes:
+- **Disk Usage**: Disk space on `/`
+- **Memory Usage**: Shows used/total memory with percentage (uses `vm_stat`/`sysctl` on macOS, `free` on Linux)
+- **Top CPU Process**: Displays the most CPU-intensive process (hidden in quiet mode)
+- **CPU Temperature**: Multi-method temperature detection
+
+Always shown (independent of `SHOW_SYSTEM_METRICS`):
 - **Package Updates**: Works across multiple package managers
 - **Reboot Status**: Warning if system reboot is required
-- **CPU Temperature**: Multi-method temperature detection
 - **Throttling Status**: Raspberry Pi throttling detection
 
 ## �📂 Directory Layout

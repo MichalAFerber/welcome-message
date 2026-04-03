@@ -21,7 +21,7 @@ SHOW_WEATHER=true
 # Default: true
 SHOW_PUBLIC_IP=true
 
-# Show system metrics (memory usage, top CPU process)
+# Show system metrics (disk usage, memory, CPU temp, top process)
 # Default: true
 SHOW_SYSTEM_METRICS=true
 

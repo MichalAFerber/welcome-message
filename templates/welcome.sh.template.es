@@ -87,7 +87,7 @@ get_uptime() {
 
 get_load_average() {
     if [[ "$IS_MACOS" == "true" ]]; then
-        uptime | awk -F'load average:' '{print $2}' | sed 's/^ *//' || echo "N/A"
+        uptime | awk -F'load averages?:' '{print $2}' | sed 's/^ *//' || echo "N/A"
     else
         cut -d ' ' -f1-3 /proc/loadavg 2>/dev/null || echo "N/A"
     fi
@@ -101,14 +101,7 @@ get_top_cpu() {
     fi
 }
 
-clear
 [[ "$SHOW_FASTFETCH" == "true" ]] && command -v fastfetch >/dev/null && fastfetch
-
-CYAN="\033[1;36m"
-YELLOW="\033[1;33m"
-GREEN="\033[1;32m"
-RED="\033[1;31m"
-NC="\033[0m"
 
 echo -e "${CYAN}¡Hola, $USER!${NC}"
 echo -e "${YELLOW}Tiempo de actividad: $(get_uptime) | Promedio de carga: $(get_load_average)${NC}"
@@ -123,14 +116,15 @@ if [[ "$SHOW_PUBLIC_IP" == "true" ]]; then
     echo -e "${GREEN}IP Pública: $PUBIP${NC}"
 fi
 
-echo -e "${CYAN}Uso de disco en /:$(df -h / | awk 'NR==2 {print " " $3 " usados de " $2 " (" $5 ")"}'${NC}"
-
 if [[ "$SHOW_SYSTEM_METRICS" == "true" ]]; then
+    echo -e "${CYAN}Uso de disco en /:$(df -h / | awk 'NR==2 {print " " $3 " usados de " $2 " (" $5 ")"}')${NC}"
     if command -v free >/dev/null 2>&1; then
-        MEM_INFO=$(free -h | awk 'NR==2 {printf "Usado: %s / %s (%.0f%%)", $3, $2, ($3/$2)*100}')
+        MEM_INFO=$(free -b | awk 'NR==2 {used=$3; total=$2; printf "Usado: %.2f GiB / %.2f GiB (%.0f%%)", used/1073741824, total/1073741824, (used/total)*100}')
         echo -e "${BLUE}Memoria: $MEM_INFO${NC}"
     elif [[ "$IS_MACOS" == "true" ]]; then
-        MEM_INFO=$(vm_stat 2>/dev/null | awk '/^Pages free:/ {free=$3} /^Pages active:/ {active=$3} /^Pages inactive:/ {inactive=$3} END {total=8*1024; used=active+inactive; printf "Usado: %.2f GiB / 8.00 GiB (%.0f%%)", used/1024/1024, (used/(used+free))*100}')
+        TOTAL_MEM_BYTES=$(sysctl -n hw.memsize 2>/dev/null)
+        PAGE_SIZE=$(sysctl -n hw.pagesize 2>/dev/null)
+        MEM_INFO=$(vm_stat 2>/dev/null | awk -v total_bytes="$TOTAL_MEM_BYTES" -v page="$PAGE_SIZE" '/^Pages active:/ {active=$3+0} /^Pages wired down:/ {wired=$4+0} /^Pages occupied by compressor:/ {comp=$5+0} END {used_bytes=(active+wired+comp)*page; total_gib=total_bytes/1024/1024/1024; used_gib=used_bytes/1024/1024/1024; printf "Usado: %.2f GiB / %.2f GiB (%.0f%%)", used_gib, total_gib, (used_gib/total_gib)*100}')
         echo -e "${BLUE}Memoria: $MEM_INFO${NC}"
     fi
     if [[ "$QUIET_MODE" != "true" ]]; then
@@ -153,10 +147,12 @@ fi
 if [ -f /var/run/reboot-required ]; then
     echo -e "${RED}⚠️  ¡Reinicio requerido!${NC}"
 fi
- 
+
 # --- CPU Temperature and Throttling ---
-TEMP=$(get_temp)
-echo -e "${CYAN}Temperatura de CPU: $TEMP${NC}"
+if [[ "$SHOW_SYSTEM_METRICS" == "true" ]]; then
+    TEMP=$(get_temp)
+    echo -e "${CYAN}Temperatura de CPU: $TEMP${NC}"
+fi
 
 IS_RPI=false
 if [[ -f /proc/device-tree/model ]] && grep -qi "raspberry pi" /proc/device-tree/model 2>/dev/null; then

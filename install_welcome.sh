@@ -354,7 +354,7 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
 # Show public IP address
 #SHOW_PUBLIC_IP=true
 
-# Show system metrics (memory, CPU usage)
+# Show system metrics (disk usage, memory, CPU temp, top process)
 #SHOW_SYSTEM_METRICS=true
 
 # Show ASCII art banner

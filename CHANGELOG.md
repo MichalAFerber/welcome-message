@@ -2,6 +2,24 @@
 
 All notable changes to the Custom Linux Welcome Message project will be documented in this file.
 
+## [2.1.0] - 2026-04-03
+
+### Bug Fixes
+
+- **macOS memory reporting** - Fixed hardcoded 8 GiB total and 4096-byte page size; now reads actual RAM via `sysctl -n hw.memsize` and page size via `sysctl -n hw.pagesize`, and counts active + wired + compressor pages
+- **macOS load average** - Fixed `load average:` (singular) to `load averages?:` to match macOS `uptime` output which uses plural
+- **Linux memory reporting** - Fixed `free -h` with awk arithmetic (human-readable strings like "1.5Gi" can't be used in math); now uses `free -b`
+- **`clear` placement** - Removed unconditional `clear` that was wiping ASCII art banner and prior terminal content
+- **French template syntax errors** - Fixed extra `fi`, missing closing `)` on disk usage line, hardcoded weather without caching/toggle, old `/dev/vcio` RPi detection
+- **Spanish/Dutch template syntax errors** - Fixed missing closing `)` on disk usage line, extra `fi` in Dutch
+- **German template** - Added missing `get_uptime`, `get_load_average`, `get_top_cpu` function definitions and OS detection
+
+### Improvements
+
+- **`SHOW_SYSTEM_METRICS` scope** - Now controls disk usage and CPU temperature in addition to memory and top CPU process, for consistent toggle behavior
+- **Removed duplicate color definitions** in all templates
+- Updated documentation to reflect `SHOW_SYSTEM_METRICS` scope change
+
 ## [2.0.2] - 2026-01-31
 
 ### 🐛 Bug Fixes

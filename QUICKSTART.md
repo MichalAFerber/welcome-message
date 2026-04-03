@@ -88,7 +88,7 @@ Edit `~/.bashrc` or `~/.zshrc` and comment out:
 | `SHOW_FASTFETCH` | `true` | Show system info with fastfetch |
 | `SHOW_WEATHER` | `true` | Show weather from wttr.in |
 | `SHOW_PUBLIC_IP` | `true` | Show your public IP |
-| `SHOW_SYSTEM_METRICS` | `true` | Show memory and CPU usage |
+| `SHOW_SYSTEM_METRICS` | `true` | Show disk usage, memory, CPU temp, and top process |
 | `SHOW_ASCII_ART` | `false` | Show ASCII art banner |
 | `QUIET_MODE` | `false` | Minimal output for faster loading |
 | `WEATHER_LOCATION` | `""` | Your city (e.g., "London") |
