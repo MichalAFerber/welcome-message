@@ -8,6 +8,7 @@ All notable changes to the Custom Linux Welcome Message project will be document
 
 - **Default weather location** changed from Lake+City to New+York
 - **Configurable weather format** - Added `WEATHER_FORMAT` option to set the wttr.in display format (default: 3). See https://wttr.in/:help for all options
+- **Config auto-update on upgrade** - Installer now adds new config options and removes deprecated ones from existing config files
 - **Individual metric toggles** - Replaced `SHOW_SYSTEM_METRICS` with individual toggles: `SHOW_DISK_USAGE`, `SHOW_MEMORY`, `SHOW_CPU_TEMP`, `SHOW_TOP_CPU`
 - **All mounted volumes** - Disk usage now lists all mounted volumes instead of just `/` (macOS system volumes are filtered out)
 - **CPU temp macOS** - CPU temperature is automatically skipped on macOS where it is not available

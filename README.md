@@ -224,7 +224,7 @@ To upgrade to the latest version, simply re-run the installer:
 curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh | bash
 ```
 
-This will update `~/welcome.sh` to the latest version while preserving your existing configuration in `~/.config/welcome.sh/config`.
+This will update `~/welcome.sh` to the latest version while preserving your existing configuration. The installer will also add any new config options and remove deprecated ones from `~/.config/welcome.sh/config`.
 
 ### Testing Configuration Changes
 After editing your config file, test it immediately:

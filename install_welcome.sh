@@ -402,6 +402,71 @@ EOF
     else
         echo "[TEST] Would create default configuration"
     fi
+else
+    # Update existing config: add new options, remove deprecated ones
+    CONFIG_UPDATED=false
+
+    # Current valid config keys and their default commented entries
+    declare -A CONFIG_ENTRIES
+    CONFIG_ENTRIES=(
+        [SHOW_FASTFETCH]="# Show fastfetch system info\n#SHOW_FASTFETCH=true"
+        [SHOW_WEATHER]="# Show weather information\n#SHOW_WEATHER=true"
+        [SHOW_PUBLIC_IP]="# Show public IP address\n#SHOW_PUBLIC_IP=true"
+        [SHOW_PRIVATE_IP]="# Show private/local IP address\n#SHOW_PRIVATE_IP=false"
+        [SHOW_UPTIME]="# Show uptime and load average\n#SHOW_UPTIME=true"
+        [SHOW_DISK_USAGE]="# Show disk usage for all mounted volumes\n#SHOW_DISK_USAGE=true"
+        [SHOW_MEMORY]="# Show memory usage\n#SHOW_MEMORY=true"
+        [SHOW_CPU_TEMP]="# Show CPU temperature (not available on macOS)\n#SHOW_CPU_TEMP=true"
+        [SHOW_TOP_CPU]="# Show top CPU process\n#SHOW_TOP_CPU=true"
+        [SHOW_ASCII_ART]="# Show ASCII art banner\n#SHOW_ASCII_ART=false"
+        [QUIET_MODE]="# Quiet mode (minimal output)\n#QUIET_MODE=false"
+        [WEATHER_LOCATION]="# Weather location (default: New+York)\n# Use format: \"City+Name\" or leave empty for default\n#WEATHER_LOCATION=\"\""
+        [WEATHER_FORMAT]="# Weather display format (default: 3)\n# See https://wttr.in/:help for all format and configuration options\n# Value is passed to wttr.in as-is, including casing\n#WEATHER_FORMAT=\"3\""
+        [GREETING]="# Custom greeting message\n#GREETING=\"You are good to go for Whiskey, Tango, Foxtrot!\""
+        [CACHE_TIMEOUT]="# Cache timeout in seconds (default: 3600 = 1 hour)\n#CACHE_TIMEOUT=3600"
+        [REQUEST_TIMEOUT]="# Request timeout for external calls (default: 3 seconds)\n#REQUEST_TIMEOUT=3"
+    )
+
+    # Deprecated keys to remove
+    DEPRECATED_KEYS="SHOW_SYSTEM_METRICS"
+
+    if [[ "$TEST_MODE" == "false" ]]; then
+        # Add missing config keys
+        for KEY in "${!CONFIG_ENTRIES[@]}"; do
+            if ! grep -q "^#*${KEY}=" "$CONFIG_FILE" 2>/dev/null; then
+                echo "" >> "$CONFIG_FILE"
+                echo -e "${CONFIG_ENTRIES[$KEY]}" >> "$CONFIG_FILE"
+                echo "[+] Added new config option: ${KEY}"
+                CONFIG_UPDATED=true
+            fi
+        done
+
+        # Remove deprecated keys
+        for KEY in $DEPRECATED_KEYS; do
+            if grep -q "^#*${KEY}=" "$CONFIG_FILE" 2>/dev/null; then
+                sed -i.bak "/^#*${KEY}=/d" "$CONFIG_FILE" && rm -f "${CONFIG_FILE}.bak"
+                echo "[-] Removed deprecated config option: ${KEY}"
+                CONFIG_UPDATED=true
+            fi
+        done
+
+        if [[ "$CONFIG_UPDATED" == "true" ]]; then
+            echo "[✓] Configuration updated at ${CONFIG_FILE}"
+        else
+            echo "[✓] Configuration is up to date"
+        fi
+    else
+        for KEY in "${!CONFIG_ENTRIES[@]}"; do
+            if ! grep -q "^#*${KEY}=" "$CONFIG_FILE" 2>/dev/null; then
+                echo "[TEST] Would add new config option: ${KEY}"
+            fi
+        done
+        for KEY in $DEPRECATED_KEYS; do
+            if grep -q "^#*${KEY}=" "$CONFIG_FILE" 2>/dev/null; then
+                echo "[TEST] Would remove deprecated config option: ${KEY}"
+            fi
+        done
+    fi
 fi
 
 echo ""
