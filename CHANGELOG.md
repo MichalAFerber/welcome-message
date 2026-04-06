@@ -8,6 +8,8 @@ All notable changes to the Custom Linux Welcome Message project will be document
 
 - **Default weather location** changed from Lake+City to New+York
 - **Configurable weather format** - Added `WEATHER_FORMAT` option to set the wttr.in display format (default: 3). See https://wttr.in/:help for all options
+- **Auto-create config** - The welcome script now creates a default config file at `~/.config/welcome.sh/config` if one doesn't exist
+- **Weather city name casing** - Format 3 now preserves the casing from your config; formats 1 and 2 prepend the city name
 - **Private IP display** - Added `SHOW_PRIVATE_IP` option to show the local/private IP address (default: false)
 - **Uptime toggle** - Added `SHOW_UPTIME` option to toggle the uptime and load average display
 - **Clear cache flag** - Added `--clear-cache` flag to `welcome.sh` for clearing cached data (useful when testing config changes)

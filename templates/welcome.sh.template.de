@@ -20,9 +20,61 @@ GREETING="You are good to go for Whiskey, Tango, Foxtrot!"
 CACHE_TIMEOUT=3600
 REQUEST_TIMEOUT=3
 
-if [[ -f "$CONFIG_FILE" ]]; then
-    source "$CONFIG_FILE"
+# Create default config if missing
+if [[ ! -f "$CONFIG_FILE" ]]; then
+    mkdir -p "$CONFIG_DIR"
+    cat > "$CONFIG_FILE" << 'CONF'
+# Welcome.sh Configuration File
+#
+# To change a setting, remove the # at the start of the line and set your value.
+# Lines starting with # are ignored.
+
+# Show fastfetch system info
+#SHOW_FASTFETCH=true
+
+# Show weather information
+#SHOW_WEATHER=true
+
+# Show public IP address
+#SHOW_PUBLIC_IP=true
+
+# Show private/local IP address
+#SHOW_PRIVATE_IP=false
+
+# Show uptime and load average
+#SHOW_UPTIME=true
+
+# Show system metrics (disk usage, memory, CPU temp, top CPU process)
+#SHOW_SYSTEM_METRICS=true
+
+# Show ASCII art banner
+#SHOW_ASCII_ART=false
+
+# Quiet mode (minimal output)
+#QUIET_MODE=false
+
+# Weather location (default: New+York)
+# Use format: "City+Name" or leave empty for default
+#WEATHER_LOCATION=""
+
+# Weather display format (default: 3)
+# See https://wttr.in/:help for all format and configuration options
+# Value is passed to wttr.in as-is, including casing
+#WEATHER_FORMAT="3"
+
+# Custom greeting message
+#GREETING="You are good to go for Whiskey, Tango, Foxtrot!"
+
+# Cache timeout in seconds (default: 3600 = 1 hour)
+#CACHE_TIMEOUT=3600
+
+# Request timeout for external calls (default: 3 seconds)
+#REQUEST_TIMEOUT=3
+CONF
 fi
+
+# Load user config
+source "$CONFIG_FILE"
 
 if [[ "${1:-}" == "--clear-cache" ]]; then
     rm -rf "$CACHE_DIR"

@@ -47,10 +47,10 @@ curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/ins
 ```
 ## 🎨 Configuration
 
-After installation, customize your welcome message by editing:
+A default config file is created automatically at `~/.config/welcome.sh/config` on first run. To change a setting, remove the `#` at the start of the line and set your value:
 
 ```bash
-~/.config/welcome.sh/config
+nano ~/.config/welcome.sh/config
 ```
 
 ### Available Options
