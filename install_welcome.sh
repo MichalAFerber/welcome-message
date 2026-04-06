@@ -342,8 +342,9 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
         mkdir -p "$CONFIG_DIR"
         cat > "$CONFIG_FILE" << 'EOF'
 # Welcome.sh Configuration File
-# 
-# Customize your welcome message by uncommenting and modifying these options:
+#
+# To change a setting, remove the # at the start of the line and set your value.
+# Lines starting with # are ignored.
 
 # Show fastfetch system info
 #SHOW_FASTFETCH=true

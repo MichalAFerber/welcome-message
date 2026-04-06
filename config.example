@@ -1,9 +1,8 @@
 # Welcome.sh Configuration File
-# 
-# This is an example configuration file for welcome.sh
-# Copy to ~/.config/welcome.sh/config and customize as needed
 #
-# Installation location: ~/.config/welcome.sh/config
+# Copy to ~/.config/welcome.sh/config and customize as needed.
+# To change a setting, remove the # at the start of the line and set your value.
+# Lines starting with # are ignored.
 
 # ============================================================================
 # Display Options
@@ -63,8 +62,7 @@ WEATHER_LOCATION=""
 WEATHER_FORMAT="3"
 
 # Custom greeting message displayed at the end
-# Default varies by language (e.g., "You are good to go for Whiskey, Tango, Foxtrot!")
-# Set to override the default greeting in any language
+# Default: "You are good to go for Whiskey, Tango, Foxtrot!"
 GREETING=""
 
 # ============================================================================

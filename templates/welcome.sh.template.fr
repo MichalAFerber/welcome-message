@@ -14,7 +14,7 @@ SHOW_UPTIME=true
 SHOW_PRIVATE_IP=false
 WEATHER_LOCATION=""
 WEATHER_FORMAT="3"
-GREETING="Tout est prêt pour Whiskey, Tango, Foxtrot !"
+GREETING="You are good to go for Whiskey, Tango, Foxtrot!"
 CACHE_TIMEOUT=3600
 REQUEST_TIMEOUT=3
 
@@ -205,6 +205,14 @@ if [[ "$SHOW_WEATHER" == "true" ]]; then
         [[ -z "$LOCATION" ]] && LOCATION="New+York"
         FORMAT="${WEATHER_FORMAT:-3}"
         WEATHER=$(timeout "$REQUEST_TIMEOUT" curl -s "wttr.in/${LOCATION}?format=${FORMAT}" 2>/dev/null || echo "N/A")
+        if [[ "$WEATHER" != "N/A" ]]; then
+            LOCATION_DISPLAY="${LOCATION//+/ }"
+            if [[ "$FORMAT" == "3" ]]; then
+                WEATHER=$(echo "$WEATHER" | sed "s/$(echo "$LOCATION_DISPLAY" | tr '[:upper:]' '[:lower:]')/$LOCATION_DISPLAY/i")
+            elif [[ "$FORMAT" == "1" || "$FORMAT" == "2" ]]; then
+                WEATHER="${LOCATION_DISPLAY}: ${WEATHER}"
+            fi
+        fi
         [[ "$WEATHER" != "N/A" ]] && set_cached "$WEATHER_CACHE" "$WEATHER"
     fi
     echo -e "${YELLOW}Météo : $WEATHER${NC}"
