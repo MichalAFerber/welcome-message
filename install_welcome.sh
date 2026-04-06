@@ -361,8 +361,17 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
 # Show uptime and load average
 #SHOW_UPTIME=true
 
-# Show system metrics (disk usage, memory, CPU temp, top CPU process)
-#SHOW_SYSTEM_METRICS=true
+# Show disk usage for all mounted volumes
+#SHOW_DISK_USAGE=true
+
+# Show memory usage
+#SHOW_MEMORY=true
+
+# Show CPU temperature (not available on macOS)
+#SHOW_CPU_TEMP=true
+
+# Show top CPU process
+#SHOW_TOP_CPU=true
 
 # Show ASCII art banner
 #SHOW_ASCII_ART=false

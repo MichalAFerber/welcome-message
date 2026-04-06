@@ -62,7 +62,10 @@ SHOW_WEATHER=true            # Show weather from wttr.in
 SHOW_PUBLIC_IP=true          # Show your public IP address
 SHOW_PRIVATE_IP=false        # Show your private/local IP address
 SHOW_UPTIME=true             # Show uptime and load average
-SHOW_SYSTEM_METRICS=true     # Show disk usage, memory, CPU temp, and top CPU process
+SHOW_DISK_USAGE=true         # Show disk usage for all mounted volumes
+SHOW_MEMORY=true             # Show memory usage
+SHOW_CPU_TEMP=true           # Show CPU temperature (not available on macOS)
+SHOW_TOP_CPU=true            # Show top CPU process
 SHOW_ASCII_ART=false         # Show ASCII art banner
 QUIET_MODE=false             # Minimal output for faster loading
 
@@ -185,13 +188,13 @@ Ubuntu 22.04+ users benefit from a Fastfetch PPA for latest builds.
 
 ## � System Metrics Dashboard
 
-When `SHOW_SYSTEM_METRICS=true`, the welcome message includes:
-- **Disk Usage**: Disk space on `/`
-- **Memory Usage**: Shows used/total memory with percentage (uses `vm_stat`/`sysctl` on macOS, `free` on Linux)
-- **Top CPU Process**: Displays the most CPU-intensive process (hidden in quiet mode)
-- **CPU Temperature**: Multi-method temperature detection
+Each metric has its own toggle:
+- **Disk Usage** (`SHOW_DISK_USAGE`): Lists all mounted volumes (filters out macOS system volumes)
+- **Memory Usage** (`SHOW_MEMORY`): Shows used/total memory with percentage (uses `vm_stat`/`sysctl` on macOS, `free` on Linux)
+- **Top CPU Process** (`SHOW_TOP_CPU`): Displays the most CPU-intensive process (hidden in quiet mode)
+- **CPU Temperature** (`SHOW_CPU_TEMP`): Multi-method temperature detection (Linux only, not available on macOS)
 
-Always shown (independent of `SHOW_SYSTEM_METRICS`):
+Always shown (no toggle):
 - **Package Updates**: Works across multiple package managers
 - **Reboot Status**: Warning if system reboot is required
 - **Throttling Status**: Raspberry Pi throttling detection

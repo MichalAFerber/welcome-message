@@ -9,7 +9,10 @@ CACHE_DIR="$HOME/.cache/welcome.sh"
 SHOW_FASTFETCH=true
 SHOW_WEATHER=true
 SHOW_PUBLIC_IP=true
-SHOW_SYSTEM_METRICS=true
+SHOW_DISK_USAGE=true
+SHOW_MEMORY=true
+SHOW_CPU_TEMP=true
+SHOW_TOP_CPU=true
 SHOW_ASCII_ART=false
 QUIET_MODE=false
 SHOW_UPTIME=true
@@ -44,8 +47,17 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
 # Show uptime and load average
 #SHOW_UPTIME=true
 
-# Show system metrics (disk usage, memory, CPU temp, top CPU process)
-#SHOW_SYSTEM_METRICS=true
+# Show disk usage for all mounted volumes
+#SHOW_DISK_USAGE=true
+
+# Show memory usage
+#SHOW_MEMORY=true
+
+# Show CPU temperature (not available on macOS)
+#SHOW_CPU_TEMP=true
+
+# Show top CPU process
+#SHOW_TOP_CPU=true
 
 # Show ASCII art banner
 #SHOW_ASCII_ART=false
@@ -200,8 +212,21 @@ if [[ "$SHOW_PRIVATE_IP" == "true" ]]; then
     echo -e "${GREEN}Private IP-Adresse: $PRIVIP${NC}"
 fi
 
-if [[ "$SHOW_SYSTEM_METRICS" == "true" ]]; then
-    echo -e "${CYAN}Speichernutzung auf /:$(df -h / | awk 'NR==2 {print " " $3 " verwendet von " $2 " (" $5 ")"}')${NC}"
+if [[ "$SHOW_DISK_USAGE" == "true" ]]; then
+    if [[ "$IS_MACOS" == "true" ]]; then
+        df -h 2>/dev/null | awk 'NR>1 && $NF !~ /^\/(System|private|dev)/ && $NF !~ /^\/Volumes\/(Recovery|Preboot|VM)/' | while read -r line; do
+            MOUNT=$(echo "$line" | awk '{print $NF}')
+            INFO=$(echo "$line" | awk '{printf "%s verwendet von %s (%s)", $3, $2, $5}')
+            echo -e "${CYAN}Speichernutzung auf ${MOUNT}: ${INFO}${NC}"
+        done
+    else
+        df -h --output=target,used,size,pcent -x tmpfs -x devtmpfs -x squashfs 2>/dev/null | awk 'NR>1 {printf "Speichernutzung auf %s: %s verwendet von %s (%s)\n", $1, $2, $3, $4}' | while read -r line; do
+            echo -e "${CYAN}${line}${NC}"
+        done
+    fi
+fi
+
+if [[ "$SHOW_MEMORY" == "true" ]]; then
     if command -v free >/dev/null 2>&1; then
         MEM_INFO=$(free -b | awk 'NR==2 {used=$3; total=$2; printf "Verwendet: %.2f GiB / %.2f GiB (%.0f%%)", used/1073741824, total/1073741824, (used/total)*100}')
         echo -e "${BLUE}Speicher: $MEM_INFO${NC}"
@@ -211,10 +236,11 @@ if [[ "$SHOW_SYSTEM_METRICS" == "true" ]]; then
         MEM_INFO=$(vm_stat 2>/dev/null | awk -v total_bytes="$TOTAL_MEM_BYTES" -v page="$PAGE_SIZE" '/^Pages active:/ {active=$3+0} /^Pages wired down:/ {wired=$4+0} /^Pages occupied by compressor:/ {comp=$5+0} END {used_bytes=(active+wired+comp)*page; total_gib=total_bytes/1024/1024/1024; used_gib=used_bytes/1024/1024/1024; printf "Verwendet: %.2f GiB / %.2f GiB (%.0f%%)", used_gib, total_gib, (used_gib/total_gib)*100}')
         echo -e "${BLUE}Speicher: $MEM_INFO${NC}"
     fi
-    if [[ "$QUIET_MODE" != "true" ]]; then
-        TOP_CPU=$(get_top_cpu)
-        [[ -n "$TOP_CPU" ]] && echo -e "${MAGENTA}Top CPU: $TOP_CPU${NC}"
-    fi
+fi
+
+if [[ "$SHOW_TOP_CPU" == "true" && "$QUIET_MODE" != "true" ]]; then
+    TOP_CPU=$(get_top_cpu)
+    [[ -n "$TOP_CPU" ]] && echo -e "${MAGENTA}Top CPU: $TOP_CPU${NC}"
 fi
 
 if command -v apt >/dev/null 2>&1; then
@@ -236,8 +262,8 @@ if [ -f /var/run/reboot-required ]; then
     echo -e "${RED}⚠️  Neustart erforderlich!${NC}"
 fi
 
-# --- CPU-Temperatur und Einschränkungen ---
-if [[ "$SHOW_SYSTEM_METRICS" == "true" ]]; then
+# CPU Temperature (not available on macOS)
+if [[ "$SHOW_CPU_TEMP" == "true" && "$IS_MACOS" != "true" ]]; then
     TEMP=$(get_temp)
     echo -e "${CYAN}CPU-Temperatur: $TEMP${NC}"
 fi

@@ -28,9 +28,21 @@ SHOW_PRIVATE_IP=false
 # Default: true
 SHOW_UPTIME=true
 
-# Show system metrics (disk usage, memory, CPU temp, top CPU process)
+# Show disk usage for all mounted volumes
 # Default: true
-SHOW_SYSTEM_METRICS=true
+SHOW_DISK_USAGE=true
+
+# Show memory usage
+# Default: true
+SHOW_MEMORY=true
+
+# Show CPU temperature (not available on macOS)
+# Default: true
+SHOW_CPU_TEMP=true
+
+# Show top CPU process
+# Default: true
+SHOW_TOP_CPU=true
 
 # Show ASCII art banner at the top
 # Default: false
