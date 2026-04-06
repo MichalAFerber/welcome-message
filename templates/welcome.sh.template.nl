@@ -184,7 +184,8 @@ fi
 
 if [[ "$SHOW_PRIVATE_IP" == "true" ]]; then
     if [[ "$IS_MACOS" == "true" ]]; then
-        PRIVIP=$(ipconfig getifaddr en0 2>/dev/null || echo "N/A")
+        IFACE=$(route -n get default 2>/dev/null | awk '/interface:/{print $2}')
+        PRIVIP=$(ipconfig getifaddr "$IFACE" 2>/dev/null || echo "N/A")
     else
         PRIVIP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "N/A")
     fi
