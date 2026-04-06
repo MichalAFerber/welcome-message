@@ -12,13 +12,24 @@ SHOW_PUBLIC_IP=true
 SHOW_SYSTEM_METRICS=true
 SHOW_ASCII_ART=false
 QUIET_MODE=false
+SHOW_UPTIME=true
+SHOW_PRIVATE_IP=false
 WEATHER_LOCATION=""
+WEATHER_FORMAT="3"
+GREETING="You are good to go for Whiskey, Tango, Foxtrot!"
 CACHE_TIMEOUT=3600
 REQUEST_TIMEOUT=3
 
 # Load user config if exists
 if [[ -f "$CONFIG_FILE" ]]; then
     source "$CONFIG_FILE"
+fi
+
+# Handle flags
+if [[ "${1:-}" == "--clear-cache" ]]; then
+    rm -rf "$CACHE_DIR"
+    echo "Cache cleared."
+    exit 0
 fi
 
 # Create cache directory
@@ -126,7 +137,9 @@ if [[ "$SHOW_FASTFETCH" == "true" ]]; then
 fi
 
 echo -e "${CYAN}Hello, $USER!${NC}"
-echo -e "${YELLOW}Uptime: $(get_uptime) | Load Average: $(get_load_average)${NC}"
+if [[ "$SHOW_UPTIME" == "true" ]]; then
+    echo -e "${YELLOW}Uptime: $(get_uptime) | Load Average: $(get_load_average)${NC}"
+fi
 
 # Public IP with caching
 if [[ "$SHOW_PUBLIC_IP" == "true" ]]; then
@@ -137,6 +150,16 @@ if [[ "$SHOW_PUBLIC_IP" == "true" ]]; then
         [[ "$PUBIP" != "N/A" ]] && set_cached "$PUBIP_CACHE" "$PUBIP"
     fi
     echo -e "${GREEN}Public IP: $PUBIP${NC}"
+fi
+
+# Private IP
+if [[ "$SHOW_PRIVATE_IP" == "true" ]]; then
+    if [[ "$IS_MACOS" == "true" ]]; then
+        PRIVIP=$(ipconfig getifaddr en0 2>/dev/null || echo "N/A")
+    else
+        PRIVIP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "N/A")
+    fi
+    echo -e "${GREEN}Private IP: $PRIVIP${NC}"
 fi
 
 # System Metrics Dashboard
@@ -221,11 +244,12 @@ if [[ "$SHOW_WEATHER" == "true" ]]; then
     WEATHER=$(get_cached "$WEATHER_CACHE" "$CACHE_TIMEOUT")
     if [[ $? -ne 0 ]]; then
         LOCATION="${WEATHER_LOCATION:-}"
-        [[ -z "$LOCATION" ]] && LOCATION="Lake+City"
-        WEATHER=$(timeout "$REQUEST_TIMEOUT" curl -s "wttr.in/${LOCATION}?format=3" 2>/dev/null || echo "N/A")
+        [[ -z "$LOCATION" ]] && LOCATION="New+York"
+        FORMAT="${WEATHER_FORMAT:-3}"
+        WEATHER=$(timeout "$REQUEST_TIMEOUT" curl -s "wttr.in/${LOCATION}?format=${FORMAT}" 2>/dev/null || echo "N/A")
         [[ "$WEATHER" != "N/A" ]] && set_cached "$WEATHER_CACHE" "$WEATHER"
     fi
     echo -e "${YELLOW}Weather: $WEATHER${NC}"
 fi
 
-echo -e "${YELLOW}You are good to go for Whiskey, Tango, Foxtrot!${NC}"
+echo -e "${YELLOW}${GREETING}${NC}"

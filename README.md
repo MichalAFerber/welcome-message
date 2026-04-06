@@ -60,12 +60,16 @@ After installation, customize your welcome message by editing:
 SHOW_FASTFETCH=true          # Show fastfetch system info
 SHOW_WEATHER=true            # Show weather from wttr.in
 SHOW_PUBLIC_IP=true          # Show your public IP address
-SHOW_SYSTEM_METRICS=true     # Show disk usage, memory, CPU temp, and top process
+SHOW_PRIVATE_IP=false        # Show your private/local IP address
+SHOW_UPTIME=true             # Show uptime and load average
+SHOW_SYSTEM_METRICS=true     # Show disk usage, memory, CPU temp, and top CPU process
 SHOW_ASCII_ART=false         # Show ASCII art banner
 QUIET_MODE=false             # Minimal output for faster loading
 
 # Customization
 WEATHER_LOCATION=""          # Set your city (e.g., "New+York", "London")
+WEATHER_FORMAT="3"           # wttr.in format (see https://wttr.in/:help)
+GREETING=""                  # Custom greeting (overrides language default)
 CACHE_TIMEOUT=3600           # Cache duration in seconds (default: 1 hour)
 REQUEST_TIMEOUT=3            # Timeout for external API calls (seconds)
 ```
@@ -91,6 +95,11 @@ SHOW_WEATHER=false
 SHOW_PUBLIC_IP=false
 QUIET_MODE=true
 EOF
+```
+
+**Clear cache (useful after config changes):**
+```bash
+~/welcome.sh --clear-cache
 ```
 
 ## 🗣️ Language Support
@@ -205,18 +214,26 @@ Want to contribute a translation? Add a new `welcome.sh.template.xx` file!
 
 ## 🧠 Advanced Usage
 
-### Manual Update
-To manually trigger an update, just rerun:
+### Upgrading
+To upgrade to the latest version, simply re-run the installer:
 
 ```bash
 curl -s https://raw.githubusercontent.com/MichalAFerber/welcome-message/main/install_welcome.sh | bash
 ```
+
+This will update `~/welcome.sh` to the latest version while preserving your existing configuration in `~/.config/welcome.sh/config`.
 
 ### Testing Configuration Changes
 After editing your config file, test it immediately:
 
 ```bash
 ~/welcome.sh
+```
+
+To force fresh data (bypass cache):
+
+```bash
+~/welcome.sh --clear-cache && ~/welcome.sh
 ```
 
 ### Temporary Disable

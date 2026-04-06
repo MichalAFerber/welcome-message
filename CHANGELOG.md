@@ -2,6 +2,18 @@
 
 All notable changes to the Custom Linux Welcome Message project will be documented in this file.
 
+## [2.1.1] - 2026-04-06
+
+### Changed
+
+- **Default weather location** changed from Lake+City to New+York
+- **Configurable weather format** - Added `WEATHER_FORMAT` option to set the wttr.in display format (default: 3). See https://wttr.in/:help for all options
+- **Private IP display** - Added `SHOW_PRIVATE_IP` option to show the local/private IP address (default: false)
+- **Uptime toggle** - Added `SHOW_UPTIME` option to toggle the uptime and load average display
+- **Clear cache flag** - Added `--clear-cache` flag to `welcome.sh` for clearing cached data (useful when testing config changes)
+- **Custom greeting** - Added `GREETING` config option to override the default language-specific greeting message
+- **Removed obsolete docs** - Removed `IMPLEMENTATION.md`, `MACOS_FIX.md`, `UPGRADE.md`, and `QUICKSTART.md` (content already covered by CHANGELOG.md and README.md)
+
 ## [2.1.0] - 2026-04-03
 
 ### Bug Fixes

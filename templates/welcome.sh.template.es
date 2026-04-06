@@ -10,11 +10,21 @@ SHOW_PUBLIC_IP=true
 SHOW_SYSTEM_METRICS=true
 SHOW_ASCII_ART=false
 QUIET_MODE=false
+SHOW_UPTIME=true
+SHOW_PRIVATE_IP=false
 WEATHER_LOCATION=""
+WEATHER_FORMAT="3"
+GREETING="¡Todo listo para Whiskey, Tango, Foxtrot!"
 CACHE_TIMEOUT=3600
 REQUEST_TIMEOUT=3
 
 [[ -f "$CONFIG_FILE" ]] && source "$CONFIG_FILE"
+if [[ "${1:-}" == "--clear-cache" ]]; then
+    rm -rf "$CACHE_DIR"
+    echo "Caché borrada."
+    exit 0
+fi
+
 mkdir -p "$CACHE_DIR"
 
 CYAN="\033[1;36m"
@@ -104,7 +114,9 @@ get_top_cpu() {
 [[ "$SHOW_FASTFETCH" == "true" ]] && command -v fastfetch >/dev/null && fastfetch
 
 echo -e "${CYAN}¡Hola, $USER!${NC}"
-echo -e "${YELLOW}Tiempo de actividad: $(get_uptime) | Promedio de carga: $(get_load_average)${NC}"
+if [[ "$SHOW_UPTIME" == "true" ]]; then
+    echo -e "${YELLOW}Tiempo de actividad: $(get_uptime) | Promedio de carga: $(get_load_average)${NC}"
+fi
 
 if [[ "$SHOW_PUBLIC_IP" == "true" ]]; then
     PUBIP_CACHE="$CACHE_DIR/public_ip"
@@ -114,6 +126,15 @@ if [[ "$SHOW_PUBLIC_IP" == "true" ]]; then
         [[ "$PUBIP" != "N/A" ]] && set_cached "$PUBIP_CACHE" "$PUBIP"
     fi
     echo -e "${GREEN}IP Pública: $PUBIP${NC}"
+fi
+
+if [[ "$SHOW_PRIVATE_IP" == "true" ]]; then
+    if [[ "$IS_MACOS" == "true" ]]; then
+        PRIVIP=$(ipconfig getifaddr en0 2>/dev/null || echo "N/A")
+    else
+        PRIVIP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "N/A")
+    fi
+    echo -e "${GREEN}IP Privada: $PRIVIP${NC}"
 fi
 
 if [[ "$SHOW_SYSTEM_METRICS" == "true" ]]; then
@@ -178,11 +199,12 @@ if [[ "$SHOW_WEATHER" == "true" ]]; then
     WEATHER_CACHE="$CACHE_DIR/weather"
     WEATHER=$(get_cached "$WEATHER_CACHE" "$CACHE_TIMEOUT")
     if [[ $? -ne 0 ]]; then
-        LOCATION="${WEATHER_LOCATION:-Lake+City}"
-        WEATHER=$(timeout "$REQUEST_TIMEOUT" curl -s "wttr.in/${LOCATION}?format=3" 2>/dev/null || echo "N/A")
+        LOCATION="${WEATHER_LOCATION:-New+York}"
+        FORMAT="${WEATHER_FORMAT:-3}"
+        WEATHER=$(timeout "$REQUEST_TIMEOUT" curl -s "wttr.in/${LOCATION}?format=${FORMAT}" 2>/dev/null || echo "N/A")
         [[ "$WEATHER" != "N/A" ]] && set_cached "$WEATHER_CACHE" "$WEATHER"
     fi
     echo -e "${YELLOW}Clima: $WEATHER${NC}"
 fi
 
-echo -e "${YELLOW}¡Todo listo para Whiskey, Tango, Foxtrot!${NC}"
+echo -e "${YELLOW}${GREETING}${NC}"

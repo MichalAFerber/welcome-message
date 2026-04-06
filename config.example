@@ -21,7 +21,15 @@ SHOW_WEATHER=true
 # Default: true
 SHOW_PUBLIC_IP=true
 
-# Show system metrics (disk usage, memory, CPU temp, top process)
+# Show your private/local IP address
+# Default: false
+SHOW_PRIVATE_IP=false
+
+# Show uptime and load average
+# Default: true
+SHOW_UPTIME=true
+
+# Show system metrics (disk usage, memory, CPU temp, top CPU process)
 # Default: true
 SHOW_SYSTEM_METRICS=true
 
@@ -39,12 +47,25 @@ QUIET_MODE=false
 
 # Weather location for wttr.in
 # Format: "City+Name" or "City" (use + for spaces)
-# Leave empty or comment out to use default (Lake+City)
+# Leave empty or comment out to use default (New+York)
 # Examples:
 #   WEATHER_LOCATION="New+York"
 #   WEATHER_LOCATION="London"
 #   WEATHER_LOCATION="Tokyo"
 WEATHER_LOCATION=""
+
+# Weather display format for wttr.in
+# See https://wttr.in/:help for the full list of format and configuration options
+# Common options: 1 (current weather), 2 (current+today+tomorrow),
+#   3 (weather with city name), 4 (weather only, no city name)
+# Note: The value is passed to wttr.in as-is, including casing
+# Default: 3
+WEATHER_FORMAT="3"
+
+# Custom greeting message displayed at the end
+# Default varies by language (e.g., "You are good to go for Whiskey, Tango, Foxtrot!")
+# Set to override the default greeting in any language
+GREETING=""
 
 # ============================================================================
 # Performance Settings

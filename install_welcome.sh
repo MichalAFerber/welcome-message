@@ -354,7 +354,13 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
 # Show public IP address
 #SHOW_PUBLIC_IP=true
 
-# Show system metrics (disk usage, memory, CPU temp, top process)
+# Show private/local IP address
+#SHOW_PRIVATE_IP=false
+
+# Show uptime and load average
+#SHOW_UPTIME=true
+
+# Show system metrics (disk usage, memory, CPU temp, top CPU process)
 #SHOW_SYSTEM_METRICS=true
 
 # Show ASCII art banner
@@ -363,9 +369,17 @@ if [[ ! -f "$CONFIG_FILE" ]]; then
 # Quiet mode (minimal output)
 #QUIET_MODE=false
 
-# Weather location (default: Lake+City)
+# Weather location (default: New+York)
 # Use format: "City+Name" or leave empty for default
 #WEATHER_LOCATION=""
+
+# Weather display format (default: 3)
+# See https://wttr.in/:help for all format and configuration options
+# Value is passed to wttr.in as-is, including casing
+#WEATHER_FORMAT="3"
+
+# Custom greeting message (overrides the default language-specific greeting)
+#GREETING="Your custom greeting here"
 
 # Cache timeout in seconds (default: 3600 = 1 hour)
 #CACHE_TIMEOUT=3600
