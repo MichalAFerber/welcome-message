@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -r \"IMPLEMENTATION\\\\|MACOS_FIX\\\\|QUICKSTART\\\\|UPGRADE\" /Volumes/Yoda/GitHub/the-michalferber-project/welcome-message/*.md --exclude-dir=.git)",
+      "Bash(wc:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git push:*)",
+      "Bash(route -n get default)",
+      "Bash(df -h / /Volumes/*)"
+    ]
+  }
+}
