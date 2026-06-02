@@ -1,0 +1,4 @@
+theme: jekyll-theme-cayman
+title: welcome-message
+description: Beautiful terminal welcome message with fastfetch, weather, system info, and ASCII art — one-liner installer for Ubuntu, Debian, Arch, and Raspberry Pi OS.
+show_downloads: false
