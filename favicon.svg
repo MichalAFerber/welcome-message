@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Welcome Message">
+  <rect width="64" height="64" rx="14" fill="#e0654f"/>
+  <path d="M15 19 h34 a4 4 0 0 1 4 4 v16 a4 4 0 0 1 -4 4 h-19 l-9 8 v-8 h-6 a4 4 0 0 1 -4 -4 v-16 a4 4 0 0 1 4 -4 z" fill="#ffffff"/>
+  <g fill="#e0654f">
+    <circle cx="24" cy="31" r="2.6"/>
+    <circle cx="32" cy="31" r="2.6"/>
+    <circle cx="40" cy="31" r="2.6"/>
+  </g>
+</svg>
